@@ -9,6 +9,8 @@ import numpy as np
 from echopy.operations import tolin, tolog
 import cv2
 from skimage.morphology import remove_small_objects
+from scipy.signal import convolve2d
+import scipy.ndimage as nd
 
 def maxSv(Sv, r, r0=10, r1=1000, roff=0, thr=(-40, -60)):
     """
@@ -106,6 +108,69 @@ def deltaSv(Sv, r, r0=10, r1=1000, roff=0, thr=20):
             if i<0:
                 i = 0
             mask[i:, j] = True        
+
+    return mask
+
+def blackwell(Sv, theta, phi, r,
+              r0=10, r1=1000, ttheta=702, tphi=282, wtheta=28 , wphi=52):
+    """
+    Detects and mask seabed using the split-beam angle and Sv, based in 
+    "Blackwell et al (2019), Aliased seabed detection in fisheries acoustic
+    data". Complete article here: https://arxiv.org/abs/1904.10736
+    
+    Args:
+        Sv (float): 2D numpy array with Sv data (dB)
+        theta (float): 2D numpy array with the along-ship angle (degrees)
+        phi (float): 2D numpy array with the athwart-ship angle (degrees)
+        r (float): 1D range array (m)
+        r0 (int): minimum range below which the search will be performed (m) 
+        r1 (int): maximum range above which the search will be performed (m)
+        ttheta (int): Theta threshold above which seabed is pre-selected (dB)
+        tphi (int): Phi threshold above which seabed is pre-selected (dB)
+        wtheta (int): window's size for mean square operation in Theta field
+        wphi (int): window's size for mean square operation in Phi field
+                
+    Returns:
+        bool: 2D array with seabed mask
+    """
+    
+    # delimit the analysis within user-defined range limits 
+    r0 = np.nanargmin(abs(r - r0))
+    r1 = np.nanargmin(abs(r - r1)) + 1
+    Svchunk = Sv[r0:r1, :]
+    thetachunk = theta[r0:r1, :]
+    phichunk = phi[r0:r1, :]
+    
+    # get blur kernels with theta & phi width dimensions 
+    ktheta = np.ones((wtheta, wtheta))/wtheta**2
+    kphi   = np.ones((wphi, wphi))/wphi**2
+    
+    # perform mean square convolution and mask if above theta & phi thresholds
+    thetamaskchunk = convolve2d(thetachunk, ktheta, 'same',
+                                boundary = 'symm')**2 > ttheta
+    phimaskchunk   = convolve2d(phichunk  ,  kphi , 'same',
+                                boundary = 'symm')**2 > tphi
+    anglemaskchunk = thetamaskchunk | phimaskchunk
+        
+    # if aliased seabed, mask Sv above the Sv median of angle-masked regions
+    Svmaskchunk = Svchunk > tolog(np.nanmedian(tolin(Svchunk[anglemaskchunk])))
+    
+    # label connected features in Svmaskchunk  
+    f = nd.label(Svmaskchunk, nd.generate_binary_structure(2,2))[0]
+    
+    # get features intercepted by the anglemaskchunk (likely, the seabed)
+    fintercepted = list(set(f[anglemaskchunk]))  
+    if 0 in fintercepted: fintercepted.remove(fintercepted == 0)
+        
+    # combine angle-intercepted features in a single mask 
+    maskchunk = np.zeros(Svchunk.shape, dtype = 'bool')
+    for i in fintercepted:
+        maskchunk = maskchunk | (f==i)
+
+    # add data above r0 and below r1 (removed in first step)
+    above = np.zeros((r0, maskchunk.shape[1]), dtype = 'bool')
+    below = np.zeros((len(r) - r1, maskchunk.shape[1]), dtype = 'bool')
+    mask  = np.r_[above, maskchunk, below]     
 
     return mask
 
