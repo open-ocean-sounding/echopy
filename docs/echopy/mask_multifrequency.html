@@ -1,0 +1,48 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module mask_multifrequency</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>mask_multifrequency</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/Users/ariza/src/rapidkrill/echopy/mask_multifrequency.py">/Users/ariza/src/rapidkrill/echopy/mask_multifrequency.py</a></font></td></tr></table>
+    <p><tt>Contains&nbsp;different&nbsp;modules&nbsp;for&nbsp;masking&nbsp;echograms&nbsp;based&nbsp;on&nbsp;their&nbsp;response&nbsp;<br>
+across&nbsp;two&nbsp;or&nbsp;more&nbsp;frequencies.<br>
+&nbsp;<br>
+Created&nbsp;on&nbsp;Thu&nbsp;Jul&nbsp;&nbsp;5&nbsp;16:47:21&nbsp;2018<br>
+@author:&nbsp;Alejandro&nbsp;Ariza,&nbsp;British&nbsp;Antarctic&nbsp;Survey</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top></td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-mask_mf_dbdiff"><strong>mask_mf_dbdiff</strong></a>(Sv1, Sv2, thr)</dt><dd><tt>The&nbsp;db-difference&nbsp;method&nbsp;compute&nbsp;the&nbsp;difference&nbsp;of&nbsp;a&nbsp;pair&nbsp;of&nbsp;frequencies,&nbsp;<br>
+and&nbsp;mask&nbsp;where&nbsp;the&nbsp;values&nbsp;fall&nbsp;within&nbsp;a&nbsp;Sv&nbsp;threshold&nbsp;range.<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Sv1&nbsp;(float):&nbsp;2D&nbsp;numpy&nbsp;array&nbsp;with&nbsp;Sv&nbsp;data,&nbsp;the&nbsp;minuend&nbsp;frequency&nbsp;(dB)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Sv2&nbsp;(float):&nbsp;2D&nbsp;numpy&nbsp;array&nbsp;with&nbsp;Sv&nbsp;data,&nbsp;subtrahend&nbsp;frequency&nbsp;(dB)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;thr&nbsp;(int):&nbsp;tupple&nbsp;containing&nbsp;the&nbsp;Sv&nbsp;threshold&nbsp;range&nbsp;(dB)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bool:&nbsp;2D&nbsp;numpy&nbsp;array&nbsp;mask&nbsp;(values&nbsp;within&nbsp;threshold&nbsp;range&nbsp;=&nbsp;True)</tt></dd></dl>
+ <dl><dt><a name="-mask_mf_other"><strong>mask_mf_other</strong></a>()</dt><dd><tt>Note&nbsp;to&nbsp;contributors:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Alternative&nbsp;multifrequency&nbsp;masking&nbsp;methods&nbsp;must&nbsp;follow&nbsp;the&nbsp;naming&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;convention&nbsp;"mask_mf_(author&nbsp;or&nbsp;method&nbsp;name)"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Check&nbsp;/DESIGN.md&nbsp;to&nbsp;adhere&nbsp;to&nbsp;our&nbsp;coding&nbsp;style.</tt></dd></dl>
+</td></tr></table>
+</body></html>

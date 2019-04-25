@@ -1,0 +1,10 @@
+# ignore git sync of files in this folder:
+__pycache__/
+.DS_Store
+bin/
+data/*
+examples/untitled*
+rapidkrill/tmp/*
+
+# except this one:
+!README.md

@@ -1,0 +1,71 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module mask_seabed</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>mask_seabed</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/Users/ariza/src/rapidkrill/echopy/mask_seabed.py">/Users/ariza/src/rapidkrill/echopy/mask_seabed.py</a></font></td></tr></table>
+    <p><tt>Contains&nbsp;different&nbsp;modules&nbsp;for&nbsp;masking&nbsp;seabed.<br>
+&nbsp;<br>
+Created&nbsp;on&nbsp;Fri&nbsp;Apr&nbsp;27&nbsp;14:45:59&nbsp;2018<br>
+@author:&nbsp;Alejandro&nbsp;Ariza,&nbsp;British&nbsp;Antarctic&nbsp;Survey</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top><a href="warnings.html">warnings</a><br>
+</td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-mask_sb_best"><strong>mask_sb_best</strong></a>()</dt><dd><tt>Echoview&nbsp;best&nbsp;bottom&nbsp;candidate<br>
+TODO:&nbsp;need&nbsp;to&nbsp;understand&nbsp;echoview&nbsp;manual&nbsp;to&nbsp;implement&nbsp;the&nbsp;algorithm!</tt></dd></dl>
+ <dl><dt><a name="-mask_sb_deltaSv"><strong>mask_sb_deltaSv</strong></a>(Sv, r, r0=10, r1=1000, roffset=0, thr=20)</dt><dd><tt>Examines&nbsp;the&nbsp;difference&nbsp;in&nbsp;Sv&nbsp;over&nbsp;a&nbsp;2-samples&nbsp;moving&nbsp;window&nbsp;along<br>
+every&nbsp;ping,&nbsp;and&nbsp;returns&nbsp;the&nbsp;range&nbsp;of&nbsp;the&nbsp;first&nbsp;value&nbsp;that&nbsp;exceeded&nbsp;<br>
+a&nbsp;user-defined&nbsp;dB&nbsp;threshold&nbsp;(likely,&nbsp;the&nbsp;seabed).<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Sv&nbsp;(float):&nbsp;2D&nbsp;Sv&nbsp;array&nbsp;(dB)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;r&nbsp;(float):&nbsp;1D&nbsp;range&nbsp;array&nbsp;(m)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;r0&nbsp;(int):&nbsp;minimum&nbsp;range&nbsp;below&nbsp;which&nbsp;the&nbsp;search&nbsp;will&nbsp;be&nbsp;performed&nbsp;(m)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;r1&nbsp;(int):&nbsp;maximum&nbsp;range&nbsp;above&nbsp;which&nbsp;the&nbsp;search&nbsp;will&nbsp;be&nbsp;performed&nbsp;(m)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;roffset&nbsp;(int):&nbsp;seabed&nbsp;range&nbsp;offset&nbsp;(m)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Svthr&nbsp;(int):&nbsp;threshold&nbsp;value&nbsp;(dB)<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bool:&nbsp;2D&nbsp;array&nbsp;with&nbsp;seabed&nbsp;mask<br>
+&nbsp;&nbsp;&nbsp;&nbsp;float:&nbsp;2D&nbsp;array&nbsp;with&nbsp;Sv&nbsp;masked</tt></dd></dl>
+ <dl><dt><a name="-mask_sb_maxSv"><strong>mask_sb_maxSv</strong></a>(Sv, r, r0=10, r1=1000, roffset=0, thr=(-40, -60))</dt><dd><tt>Initially&nbsp;detects&nbsp;the&nbsp;seabed&nbsp;as&nbsp;the&nbsp;ping&nbsp;sample&nbsp;with&nbsp;the&nbsp;strongest&nbsp;Sv&nbsp;value,&nbsp;<br>
+as&nbsp;long&nbsp;as&nbsp;it&nbsp;exceeds&nbsp;a&nbsp;dB&nbsp;threshold.&nbsp;Then&nbsp;it&nbsp;searchs&nbsp;up&nbsp;along&nbsp;the&nbsp;ping&nbsp;<br>
+until&nbsp;Sv&nbsp;falls&nbsp;below&nbsp;a&nbsp;secondary&nbsp;(lower)&nbsp;dB&nbsp;threshold,&nbsp;where&nbsp;the&nbsp;final&nbsp;<br>
+seabed&nbsp;is&nbsp;set.<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Sv&nbsp;(float):&nbsp;2D&nbsp;Sv&nbsp;array&nbsp;(dB)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;r&nbsp;(float):&nbsp;1D&nbsp;range&nbsp;array&nbsp;(m)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;r0&nbsp;(int):&nbsp;minimum&nbsp;range&nbsp;below&nbsp;which&nbsp;the&nbsp;search&nbsp;will&nbsp;be&nbsp;performed&nbsp;(m)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;r1&nbsp;(int):&nbsp;maximum&nbsp;range&nbsp;above&nbsp;which&nbsp;the&nbsp;search&nbsp;will&nbsp;be&nbsp;performed&nbsp;(m)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;roffset&nbsp;(int):&nbsp;seabed&nbsp;range&nbsp;offset&nbsp;(m)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Svthr&nbsp;(int):&nbsp;2-elements&nbsp;tupple&nbsp;with&nbsp;main&nbsp;and&nbsp;2ndary&nbsp;Sv&nbsp;thresholds&nbsp;(dB)<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bool:&nbsp;2D&nbsp;array&nbsp;with&nbsp;seabed&nbsp;mask<br>
+&nbsp;&nbsp;&nbsp;&nbsp;float:&nbsp;2D&nbsp;array&nbsp;with&nbsp;Sv&nbsp;masked</tt></dd></dl>
+ <dl><dt><a name="-mask_sb_other"><strong>mask_sb_other</strong></a>()</dt><dd><tt>Note&nbsp;to&nbsp;contributors:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Alternative&nbsp;algorithms&nbsp;for&nbsp;masking&nbsp;seabed&nbsp;must&nbsp;follow&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;naming&nbsp;convention&nbsp;"mask_sb_(author&nbsp;or&nbsp;method&nbsp;name)"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Check&nbsp;/DESIGN.md&nbsp;to&nbsp;adhere&nbsp;to&nbsp;our&nbsp;coding&nbsp;style.</tt></dd></dl>
+</td></tr></table>
+</body></html>

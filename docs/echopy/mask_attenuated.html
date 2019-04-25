@@ -1,0 +1,71 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module mask_attenuated</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>mask_attenuated</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/Users/ariza/src/rapidkrill/echopy/mask_attenuated.py">/Users/ariza/src/rapidkrill/echopy/mask_attenuated.py</a></font></td></tr></table>
+    <p><tt>Contains&nbsp;different&nbsp;modules&nbsp;for&nbsp;masking&nbsp;attenuated&nbsp;signal.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Created&nbsp;on&nbsp;Fri&nbsp;Apr&nbsp;27&nbsp;14:18:05&nbsp;2018<br>
+@author:&nbsp;Alejandro&nbsp;Ariza,&nbsp;British&nbsp;Antarctic&nbsp;Survey</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top><a href="warnings.html">warnings</a><br>
+</td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-mask_as_other"><strong>mask_as_other</strong></a>()</dt><dd><tt>Note&nbsp;to&nbsp;contributors:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Alternative&nbsp;algorithms&nbsp;for&nbsp;masking&nbsp;attenuated&nbsp;signal&nbsp;must&nbsp;follow&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;naming&nbsp;convention&nbsp;"mask_as_(author&nbsp;or&nbsp;method&nbsp;name)"<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Check&nbsp;/DESIGN.md&nbsp;to&nbsp;adhere&nbsp;to&nbsp;our&nbsp;coding&nbsp;style.</tt></dd></dl>
+ <dl><dt><a name="-mask_as_ryan"><strong>mask_as_ryan</strong></a>(Sv, r, r0, r1, n, thr, verbose=False)</dt><dd><tt>Locate&nbsp;attenuated&nbsp;signal&nbsp;and&nbsp;create&nbsp;a&nbsp;mask&nbsp;following&nbsp;the&nbsp;attenuated&nbsp;signal&nbsp;<br>
+filter&nbsp;as&nbsp;in:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Ryan&nbsp;et&nbsp;al.&nbsp;(2015)&nbsp;‘Reducing&nbsp;bias&nbsp;due&nbsp;to&nbsp;noise&nbsp;and&nbsp;attenuation&nbsp;in&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;open-ocean&nbsp;echo&nbsp;integration&nbsp;data’,&nbsp;ICES&nbsp;Journal&nbsp;of&nbsp;Marine&nbsp;Science,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;72:&nbsp;2482–2493.<br>
+&nbsp;<br>
+Scattering&nbsp;Layers&nbsp;(SLs)&nbsp;are&nbsp;continuous&nbsp;high&nbsp;signal-to-noise&nbsp;regions&nbsp;with&nbsp;<br>
+low&nbsp;inter-ping&nbsp;variability.&nbsp;But&nbsp;attenuated&nbsp;pings&nbsp;create&nbsp;gaps&nbsp;within&nbsp;SLs.&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;attenuation&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;attenuation&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ping&nbsp;evaluated<br>
+______&nbsp;V&nbsp;_______________________&nbsp;V&nbsp;____________.....V.....____________<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;|&nbsp;&nbsp;&nbsp;scattering&nbsp;layer&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;block&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<br>
+______|&nbsp;|_______________________|&nbsp;|____________...........____________|<br>
+&nbsp;<br>
+The&nbsp;filter&nbsp;takes&nbsp;advantage&nbsp;of&nbsp;differences&nbsp;with&nbsp;preceding&nbsp;and&nbsp;subsequent&nbsp;<br>
+pings&nbsp;to&nbsp;detect&nbsp;and&nbsp;mask&nbsp;attenuation.&nbsp;A&nbsp;comparison&nbsp;is&nbsp;made&nbsp;ping&nbsp;by&nbsp;ping&nbsp;<br>
+with&nbsp;respect&nbsp;to&nbsp;a&nbsp;block&nbsp;of&nbsp;the&nbsp;reference&nbsp;layer.&nbsp;The&nbsp;entire&nbsp;ping&nbsp;is&nbsp;masked&nbsp;<br>
+if&nbsp;the&nbsp;ping&nbsp;median&nbsp;is&nbsp;less&nbsp;than&nbsp;the&nbsp;block&nbsp;median&nbsp;by&nbsp;a&nbsp;user-defined&nbsp;<br>
+threshold&nbsp;value.<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Sv&nbsp;(float):&nbsp;2D&nbsp;numpy&nbsp;array&nbsp;with&nbsp;Sv&nbsp;data&nbsp;to&nbsp;be&nbsp;masked&nbsp;(dB)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;r&nbsp;(float):&nbsp;&nbsp;1D&nbsp;numpy&nbsp;array&nbsp;with&nbsp;range&nbsp;data&nbsp;(m)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;r0&nbsp;(int):&nbsp;upper&nbsp;limit&nbsp;of&nbsp;SL&nbsp;(m)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;r1&nbsp;(int):&nbsp;lower&nbsp;limit&nbsp;of&nbsp;SL&nbsp;(m)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;n&nbsp;(int):&nbsp;number&nbsp;of&nbsp;preceding&nbsp;&amp;&nbsp;subsequent&nbsp;pings&nbsp;defining&nbsp;the&nbsp;block<br>
+&nbsp;&nbsp;&nbsp;&nbsp;thr&nbsp;(int):&nbsp;user-defined&nbsp;threshold&nbsp;value&nbsp;(dB)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;verbose&nbsp;(bool):&nbsp;set&nbsp;to&nbsp;True&nbsp;to&nbsp;print&nbsp;operation&nbsp;statements&nbsp;in&nbsp;the&nbsp;console<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bool:&nbsp;2D&nbsp;numpy&nbsp;array&nbsp;mask&nbsp;(attenuated&nbsp;signal&nbsp;=&nbsp;True)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;float:&nbsp;2D&nbsp;numpy&nbsp;array&nbsp;with&nbsp;Sv&nbsp;data&nbsp;masked&nbsp;with&nbsp;NAN&nbsp;values</tt></dd></dl>
+</td></tr></table>
+</body></html>
