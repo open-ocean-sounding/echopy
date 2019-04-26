@@ -42,6 +42,12 @@ In addition, echopy uses the following packages
 
 ## Packaging
 
+Install echopy:
+```
+pip install echopy
+```
+ or download the installer in [https://pypi.org/project/echopy](https://pypi.org/project/echopy).
+
 Notes for maintainers - `echopy` is packaged acccording to the
 [Python Packaging User Guide](https://packaging.python.org/tutorials/packaging-projects/). For
 a new release, update the version number in `setup.py` and `echopy/__init__.py` and then:
