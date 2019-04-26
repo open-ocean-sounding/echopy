@@ -40,6 +40,21 @@ In addition, echopy uses the following packages
 * [opencv-python](https://pypi.org/project/opencv-python/) for image processing.
 * [scikit-image](https://scikit-image.org/) for image processing.
 
+## Packaging
+
+Notes for maintainers - `echopy` is packaged acccording to the
+[Python Packaging User Guide](https://packaging.python.org/tutorials/packaging-projects/). For
+a new release, update the version number in `setup.py` and `echopy/__init__.py` and then:
+
+```
+python3 -m pip install --user --upgrade setuptools wheel
+python3 setup.py sdist bdist_wheel
+python3 -m pip install --user --upgrade twine
+python3 -m twine upload  dist/*
+```
+
+This allows for installation using `pip install echopy`.
+
 ## Maintainer
 * **Alejandro Ariza** - *British Antarctic Survey* - [alejandro-ariza](https://github.com/alejandro-ariza)
 
