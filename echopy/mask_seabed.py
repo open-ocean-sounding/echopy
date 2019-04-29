@@ -53,7 +53,12 @@ def maxSv(Sv, r, r0=10, r1=1000, roff=0, thr=(-40, -60)):
         if i!=0:
             
             # decrease indexes until Sv mean falls below the 2nd threshold
-            while (tolog(np.nanmean(tolin(Sv[i-5:i, j])))>thr[1]) & (i>=5):
+            if np.isnan(Sv[i-5:i, j]).all():
+                Svmean = thr[1]+1
+            else:      
+                Svmean = tolog(np.nanmean(tolin(Sv[i-5:i, j])))
+            
+            while (Svmean>thr[1]) & (i>=5):
                 i -= 1
                        
             # subtract range offset & mask all the way down 
