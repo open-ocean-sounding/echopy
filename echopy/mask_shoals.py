@@ -11,13 +11,16 @@ Created on Mon Jun  3 12:58:35 2019
 import numpy as np
 import scipy.ndimage as nd
 
-def weill(Sv, r, thr=-65, maxvgap=4, minlength=2):
+def weill(Sv, thr=-70, maxvgap=5, maxhgap=0, minvlen=0, minhlen=0, start=0):
     """
-    Mask shoals as in "Weill et al. (1993): MOVIES-B — an acoustic detection 
-    description software . Application to shoal species' classification".
+    Detects and masks shoals following the algorithm decribed in:
+        
+        "Weill et al. (1993): MOVIES-B — an acoustic detection description
+        software . Application to shoal species' classification".
     
-    Contiguous Sv samples above a given threshold will be considered as shoals,
-    as long as they meet the following contiguity laws:
+    Contiguous Sv samples above a given threshold will be considered as the
+    same shoal, as long as it meets the contiguity criteria described by Weill
+    et al. (1993):
         
         * Vertical contiguity: along-ping gaps are allowed to some extent. 
         Tipically, no more than the number of samples equivalent to half of the
@@ -25,23 +28,43 @@ def weill(Sv, r, thr=-65, maxvgap=4, minlength=2):
         
         * Horizontal contiguity: above-threshold features from contiguous pings
         will be regarded as the same shoal if there is at least one sample in
-        each ping at the same range depth.          
-          
-    Shoals shorter than a user-defined number of pings will be ruled out.
+        each ping at the same range depth.
+        
+    Although the default settings strictly complies with Weill's contiguity
+    criteria, other contiguity arguments has been enabled in this function to
+    increase operability. For instance, the posibility to link non-contiguous
+    pings to certain extent, or to set minimum vertical and horizontal lengths
+    for a feature to be regarded as a shoal.
     
     Args:
         Sv (float): 2D numpy array with Sv data (dB).
         r (float): 1D numpy array with range data (m).
         thr (int): Sv threshold (dB).
         maxvgap (int): maximum vertical gap allowed (n samples).
-        minlength (int): minimum length for a shoal to be eligible (n pings).
+        maxhgap (int): maximum horizontal gap allowed (n pings).
+        minvlen (int): minimum vertical length for a shoal to be eligible
+                       (n samples).
+        minhlen (int): minimum horizontal length for a shoal to be eligible
+                       (n pings).
+        start (int): ping index to start processing. If greater than cero, it
+                     means that Sv carries data from a preceeding file and the
+                     the algorithm needs to know where to start processing.
         
     Returns:
         bool: 2D mask with shoals identified.
     """
-    
+      
+    # extent Sv to preceeding pings if start is not 0
+    if start==0:
+        Sv_ = Sv.copy()
+    else:        
+        if start>=minhlen:
+            Sv_ = Sv[:, start-minhlen:]
+        else:
+            raise Exception('Not enough room to extent Sv before the start')
+                
     # mask Sv above threshold
-    mask = Sv>thr
+    mask = Sv_>thr
     
     # for each ping in the mask... 
     for jdx, ping in enumerate(list(np.transpose(mask))):    
@@ -56,14 +79,17 @@ def weill(Sv, r, thr=-65, maxvgap=4, minlength=2):
             labels = np.arange(1, np.max(pinglabelled)+1)
             for label in labels:
                 
-                # if gaps are equal/shorter than maxgap...
+                # if vertical gaps are equal/shorter than maxvgap...
                 gap= pinglabelled==label
                 if np.sum(gap)<=maxvgap:
                     
-                    # get gap indexes and fill in the mask
+                    # get gap indexes and fill in with True values (masked)
                     idx= np.where(gap)[0]
                     if (not 0 in idx) & (not len(mask)-1 in idx): #(exclude edges)
                         mask[idx, jdx] = True
+                        
+                # if horizontal gaps are equal/shorter than maxhgap...
+                # TODO: implement this bit
     
     # label connected features in the mask
     masklabelled = nd.label(mask)[0]  
@@ -72,17 +98,28 @@ def weill(Sv, r, thr=-65, maxvgap=4, minlength=2):
     labels = np.arange(1, np.max(masklabelled)+1)
     for label in labels:
             
-        # target feature & calculate its maximum length
+        # target feature & calculate its maximum vertical/horizontal length
         feature = masklabelled==label
-        featurelength = np.max(np.sum(feature, axis=1))
+        featurehlen = np.max(np.sum(feature, axis=1))
+        featurevlen = np.max(np.sum(feature, axis=0))
         
-        # remove feature from mask if length < minlength
-        if featurelength<minlength:
+        # remove feature from mask if its maximum vertical lenght < minvlen
+        if featurevlen<minvlen:
             idx, jdx = np.where(feature)
             mask[idx, jdx] = False
-                    
-    # the remaining features in the mask are your shoals:
-    return mask
+            
+        # remove feature from mask if its maximum horizontal lenght < minhlen
+        if featurehlen<minhlen:
+            idx, jdx = np.where(feature)
+            mask[idx, jdx] = False                    
+    
+    # get mask indicating where shoal detection was not feasible (near edges)    
+    mask_ = np.zeros_like(mask)
+    mask_[:, 0:minhlen] = True
+    mask_[:, -minhlen:] = True 
+    
+    # return masks, from the start ping onwards           
+    return mask[:, start:], mask_[:, start:]
 
 def other():
     """
