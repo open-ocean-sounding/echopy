@@ -7,10 +7,9 @@ Created on Fri Apr 27 14:28:57 2018
 """
 
 import numpy as np
-from echopy.operations import binv, bin2d, binvback, bin2dback
+from echopy import resample as rs
 
-def derobertis(Sv, r, alpha, m, n,
-               m0=2, bgnmax =-125):
+def derobertis(Sv, iax, jax, m, n, r, alpha, bgnmax=-125):
     """
     Estimate background noise as in:
         
@@ -19,107 +18,49 @@ def derobertis(Sv, r, alpha, m, n,
         noise’, ICES Journal of Marine Science, 64: 1282–1291.
     
     Args:
-        Sv (float): 2D numpy array with volume backscattering strength data (dB)
-        r (float):  1D numpy array with range data (m)
-        alpha (float): absorption coefficient value (dB m-1)
-        m (int): binning vertical resolution (m)
-        n (int): binning horizontal resolution (pings)
-        m0 (int): vertical smoothing height before noise estimation (m) 
-        bgnmax (int): maximum background noise estimation (dB)
+        Sv     (float)    : 2D array with Sv data (dB)
+        iax    (int/float): 1D array with i axis (nsamples or metres)
+        jax    (int/float): 1D array with j axis (npings, seconds, metres, etc)
+        m      (int/float): i resampling length (nsamples or metres)
+        n      (int/float): j resampling length (npings, seconds, metres, etc)
+        r      (float)    : 1D array with range data (metres)
+        alpha  (float)    : absorption coefficient value (dB m-1)
+        bgnmax (int/float): maximum background noise estimation (dB)
     
     Returns:
         float: 2D numpy array with background noise estimation (dB)
+        bool : 2D array with mask indicating valid noise estimation.
     """
     
-    # bin Sv vertically to smooth out Sv data    
-    Svbinned, rbinned = binv(Sv, r, m0)
-    Svsmooth = binvback(Svbinned, rbinned, r)
-    
-    # estimate TVG 
-    r_ = r.copy()
+    # calculate TVG 
+    r_       = r.copy()
     r_[r<=0] = np.nan
-    tvg = 20*np.log10(r_) + 2*alpha*r_
+    TVG      = 20*np.log10(r_) + 2*alpha*r_
     
     # subtract TVG from Sv  
-    Svnotvg = Svsmooth - np.vstack(tvg)
+    Sv_noTVG = Sv - np.vstack(TVG)
     
-    # resample Sv-TVG into m (meters) by n (pings) cells   
-    pings = np.arange(0, Sv.shape[1])
-    Svnotvgbnd, rbnd, pingsbnd = bin2d(Svnotvg, r, pings, m, n)
+    # resample Sv_noTVG into m by n bins    
+    iaxrs       = np.arange(iax[0], iax[-1], m)
+    jaxrs       = np.arange(jax[0], jax[-1], n)
+    Sv_noTVGrs  = rs.twod(Sv_noTVG, iax, jax, iaxrs, jaxrs, log=True)[0]
     
-    # compute background noise as the minimun value per interval
-    Svnotvgbnd[:, np.isnan(Svnotvgbnd).all(axis=0)] = 0
-    bgnbnd = np.nanmin(Svnotvgbnd, 0)
-    bgnbnd[np.isnan(Svnotvgbnd).all(axis=0)] = np.nan
-    bgnbnd = np.tile(bgnbnd, [len(Svnotvgbnd), 1])
+    # compute background noise as the minimun value per interval in Sv_noTVGrs
+    jbool                = np.isnan(Sv_noTVGrs).all(axis=0)
+    Sv_noTVGrs [:,jbool] = 0
+    bgn_noTVGrs          = np.nanmin(Sv_noTVGrs, 0)
+    bgn_noTVGrs[  jbool] = np.nan
+    bgn_noTVGrs          = np.tile(bgn_noTVGrs, [len(Sv_noTVGrs), 1])
         
     # Prevent to exceed the maximum background noise expected
-    mask = np.ma.masked_greater(bgnbnd, bgnmax).mask
-    bgnbnd[mask] = bgnmax
+    mask              = np.ma.masked_greater(bgn_noTVGrs, bgnmax).mask
+    bgn_noTVGrs[mask] = bgnmax
     
     # resample background noise to previous Sv resolution, and add TVG
-    bgn = bin2dback(bgnbnd, rbnd, pingsbnd, r, pings)
-    bgn = np.vstack(tvg) + bgn
+    bgn_noTVG, mask_ = rs.full(bgn_noTVGrs, iaxrs, jaxrs, iax, jax)
+    bgn              = bgn_noTVG + np.vstack(TVG)
     
-    return bgn
-
-def derobertis_mod(Sv, r, alpha, m, n,
-                   m0=2, bgnmax=-125, operation='mean'):
-    """
-    Modified from module "derobertis". This one allows to choose between
-    different average operations.
-    
-    Args:
-        Sv (float): 2D array with volume backscattering strength data (dB).
-        r (float):  1D array with range data (m).
-        alpha (float): absorption coefficient value (dB m-1).
-        m (int): binning vertical resolution (m).
-        n (int): binning horizontal resolution (pings).
-        m0 (int): vertical smoothing height before noise estimation (m). 
-        bgnmax (int): maximum background noise estimation (dB).
-        operation (str): type of average operation:
-            'mean' (default)
-            'percentileXX' (XX is the percentile rank. e.g., 'percentile90')
-            'median'
-            'mode'
-    
-    Returns:
-        float: 2D array with background noise estimation (dB)
-    """
-    
-    # bin Sv vertically to smooth out Sv data    
-    Svbinned, rbinned = binv(Sv, r, m0)[0:2]
-    Svsmooth = binvback(Svbinned, rbinned, r)
-    
-    # estimate TVG
-    r_ = r.copy()
-    r_[r<=0] = np.nan
-    tvg = 20*np.log10(r_) + 2*alpha*r_
-    
-    # subtract TVG from Sv  
-    Svnotvg = Svsmooth - np.vstack(tvg)
-    
-    # resample Sv-TVG into m (meters) by n (pings) cells   
-    pings = np.arange(len(Sv[0]))
-    Svnotvgbnd, rbnd, pingsbnd = bin2d(Svnotvg, r, pings, m, n,
-                                       operation=operation)[0:3]
-    
-    # compute background noise as the minimun value per interval
-    Svnotvgbnd[:, np.isnan(Svnotvgbnd).all(axis=0)] = 0
-    bgnbnd = np.nanmin(Svnotvgbnd, 0)
-    bgnbnd[np.isnan(Svnotvgbnd).all(axis=0)] = np.nan
-    bgnbnd = np.tile(bgnbnd, [len(Svnotvgbnd), 1])
-        
-    # Prevent to exceed the maximum background noise expected
-    mask = np.ma.masked_greater(bgnbnd, bgnmax).mask
-    bgnbnd[mask] = bgnmax
-    
-    # resample background noise to previous Sv resolution, and add TVG
-    bgn = bin2dback(bgnbnd, rbnd, pingsbnd, r, pings)
-    bgn[:, np.isnan(Sv).all(axis=0)] = np.nan
-    bgn = np.vstack(tvg) + bgn
-    
-    return bgn
+    return bgn, mask_
 
 def other():
     """
