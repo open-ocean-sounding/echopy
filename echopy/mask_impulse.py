@@ -7,12 +7,14 @@ Created on Fri Apr 27 14:24:44 2018
 """
 
 import numpy as np
-from echopy.operations import binv, binvback, tolin, tolog
+#from echopy.operations import binv, binvback, tolin, tolog
 from skimage.morphology import erosion
 from skimage.morphology import dilation
 from scipy.ndimage.filters import median_filter as medianf
+from echopy import resample as rs
+from echopy import transform as tf
 
-def ryan(Sv, r, m=5, n=1, thr=10, start=0):
+def ryan(Sv, iax, m, n=1, thr=10):
     """
     Mask impulse noise following the two-sided comparison method described
     in:        
@@ -21,43 +23,42 @@ def ryan(Sv, r, m=5, n=1, thr=10, start=0):
         72: 2482–2493.
 
     Args:
-        Sv (float): 2D array with Sv data to be masked (dB).
-        r (float):  1D array with range data (m).
-        m (int): vertical binning length (m).
-        n (int): number of pings either side for comparisons.
-        thr (int): user-defined threshold value (dB).
-        start (int): ping index to start processing.
+        Sv  (float)     : 2D array with Sv data to be masked (dB).
+        iax (int, float): 1D array with i axis data (n samples or range).
+        m   (int, float): vertical binning length (n samples or range).
+        n   (int)       : number of pings either side for comparisons.
+        thr (int,float) : user-defined threshold value (dB).
         
     Returns:
-        list: 2D boolean array with IN mask and 2D boolean array with mask
-              indicating where IN detection was unfeasible.  
+        bool: 2D array with IN mask
+        bool: 2D array with mask indicating valid IN mask samples.  
     """    
         
-    # resample down vertically into x-meters bins    
-    Svbinned, rbinned, missing = binv(Sv, r, m)
-    Svbinned[missing>50] = np.nan
+    # resample down vertically    
+    iax_ = np.arange(iax[0], iax[-1], m)
+    Sv_  = rs.oned(Sv, iax, iax_, log=True)[0]
     
-    # resample back to native resolution
-    Svsmoothed = binvback(Svbinned, rbinned, r)
+    # resample back to full resolution
+    jax = np.arange(len(Sv[0]))
+    Sv_, mask_ = rs.full(Sv_, iax_, jax, iax, jax)
         
     #side comparison (±n)
-    dummy = np.zeros((r.shape[0], n)); dummy[:] = np.nan     
-    comparison_forward = Svsmoothed - np.c_[Svsmoothed[:, n:], dummy]
-    comparison_backward = Svsmoothed - np.c_[dummy, Svsmoothed[:, 0:-n]]
+    dummy               = np.zeros((iax.shape[0], n))*np.nan     
+    comparison_forward  = Sv_ - np.c_[Sv_[:, n:], dummy]
+    comparison_backward = Sv_ - np.c_[dummy, Sv_[:, 0:-n]]
     
-    # get mask
-    maskf = np.ma.masked_greater(comparison_forward, thr).mask
+    # get IN mask
+    maskf = np.ma.masked_greater(comparison_forward , thr).mask
     maskb = np.ma.masked_greater(comparison_backward, thr).mask
-    mask = maskf & maskb
+    mask  = maskf & maskb
     
-    # get mask indicating where IN detection couldn't be carried out    
-    mask_ = np.isnan(Svsmoothed)
-    mask_[:, 0:n] = True
-    mask_[:, -n:] = True    
+    # get second mask indicating valid samples in IN mask    
+    mask_[:, 0:n] = False
+    mask_[:, -n:] = False    
     
-    return [mask[:, start:], mask_[:, start:]]
+    return mask, mask_
 
-def ryan_iterable(Sv, r, m=5, n=(1,2), thr=10, start=0):
+def ryan_iterable(Sv, iax, m, n=(1,2), thr=10):
     """
     Modified from "ryan" so that the parameter "n" can be provided multiple
     times. It enables the algorithm to iterate and perform comparisons at
@@ -66,45 +67,43 @@ def ryan_iterable(Sv, r, m=5, n=(1,2), thr=10, start=0):
     spikes adjacent each other.
     
     Args:
-        Sv (float): 2D array with Sv data to be masked (dB). 
-        r (float):  1D array with range data (m).
-        m (int): vertical binning length (m).
-        n (tuple): number of pings either side for comparisons.
-        thr (int): user-defined threshold value (dB).
-        start (int): ping index to start processing. 
+        Sv  (float)     : 2D array with Sv data to be masked (dB).
+        iax (int, float): 1D array with i axis data (n samples or range).
+        m   (int, float): vertical binning length (n samples or range).
+        n   (int)       : number of pings either side for comparisons.
+        thr (int,float) : user-defined threshold value (dB).
         
     Returns:
-        list: 2D array with IN mask and 2D array with mask indicating where
-              IN detection was unfeasible.
+        bool: 2D array with IN mask
+        bool: 2D array with mask indicating valid IN mask samples.
     """    
         
-    # resample down vertically into x-meters bins    
-    Svbinned, rbinned, missing = binv(Sv, r, m)
-    Svbinned[missing>50] = np.nan
+    # resample down vertically    
+    iax_ = np.arange(iax[0], iax[-1], m)
+    Sv_  = rs.oned(Sv, iax, iax_, log=True)[0]
     
-    # resample back to native resolution
-    Svsmoothed = binvback(Svbinned, rbinned, r)
+    # resample back to full resolution
+    jax = np.arange(len(Sv[0]))
+    Sv_, mask_ = rs.full(Sv_, iax_, jax, iax, jax)
     
     # perform side comparisons and combine masks in one unique mask
-    mask = np.zeros(Sv.shape, dtype=bool)
+    mask = np.zeros_like(Sv, dtype=bool)
     for i in n:
-        dummy = np.zeros((r.shape[0], i)); dummy[:] = np.nan     
-        comparison_forward = Svsmoothed - np.c_[Svsmoothed[:,i:], dummy]
-        comparison_backward = Svsmoothed - np.c_[dummy, Svsmoothed[:, 0:-i]]
-        maskf = np.ma.masked_greater(comparison_forward, thr).mask
-        maskb = np.ma.masked_greater(comparison_backward, thr).mask
-        mask = mask | (maskf&maskb)
+        dummy    = np.zeros((iax.shape[0], i)); dummy[:] = np.nan     
+        forward  = Sv_ - np.c_[Sv_[:,i:], dummy]
+        backward = Sv_ - np.c_[dummy, Sv_[:, 0:-i]]
+        maskf    = np.ma.masked_greater(forward, thr).mask
+        maskb    = np.ma.masked_greater(backward, thr).mask
+        mask     = mask | (maskf&maskb)
     
-    # get mask indicating where IN detection couldn't be implemented    
-    mask_ = np.isnan(Svsmoothed)
-    mask_[:, 0:max(n)] = True
-    mask_[:, -max(n):] = True    
+    # get second mask indicating valid samples in IN mask    
+    mask_[:, 0:max(n)] = False
+    mask_[:, -max(n):] = False    
     
-    return [mask[:, start:], mask_[:, start:]]
+    return mask, mask_
 
-
-def wang(Sv, thr=(-70,-40),
-         erode=[(3,3)], dilate=[(5,5),(7,7)], median=[(7,7)]):
+def wang(Sv, thr=(-70,-40), erode=[(3,3)], dilate=[(5,5),(7,7)],
+         median=[(7,7)]):
     """
     Clean impulse noise from Sv data following the method decribed by:
         
@@ -113,52 +112,66 @@ def wang(Sv, thr=(-70,-40),
         SG-ASAM: 15/02.
         
     This algorithm runs different cycles of erosion, dilation, and median
-    filtering to clean up Sv from impulse noise. Note that this function
+    filtering to clean impulse noise from Sv. Note that this function
     returns a clean/corrected Sv array, instead of a boolean array indicating
     the occurrence of impulse noise.
         
     Args:
-        Sv (float)  : 2D numpy array with Sv data (dB).
-        thr (int)   : 2-elements tupple with bottom and top Sv thresholds (dB).
-        erode (int) : list of 2-element tupples indicating the window's size
-                      for each erosion cycle.
-        dilate (int): list of 2-element tupples indicating the window's size
-                      for each dilation cycle.
-        median (int): list of 2-element tupples indicating the window's size
-                      for each median filter cycle.
+        Sv     (float)    : 2D numpy array with Sv data (dB).
+        thr    (int/float): 2-element tupple with bottom/top Sv thresholds (dB)
+        erode  (int)      : list of 2-element tupples indicating the window's
+                            size for each erosion cycle.
+        dilate (int)      : list of 2-element tupples indicating the window's
+                            size for each dilation cycle.
+        median (int)      : list of 2-element tupples indicating the window's
+                            size for each median filter cycle.
                       
     Returns:
-        float: 2D numpy array with clean Sv data.
+        float             : 2D array with clean Sv data.
+        bool              : 2D array with mask indicating valid clean Sv data.
     """
-    
-    # set values out of threshold to -999
-    Sv_thresholded = Sv.copy()
+
+    # set weak noise and strong interference as vacant samples (-999)
+    Sv_thresholded                          = Sv.copy()
     Sv_thresholded[(Sv<thr[0])|(Sv>thr[1])] = -999
     
-    # run erosion cycles
-    Sv_eroded = Sv_thresholded.copy()
+    # remaining weak interferences will take neighbouring vacant values 
+    # by running erosion cycles
+    Sv_eroded = Sv.copy()
     for e in erode:
-        Sv_eroded = erosion(Sv_eroded, np.ones(e))
-
-    # run dilation cycles
+        Sv_eroded = erosion(Sv_thresholded, np.ones(e))
+    
+    # the last step might have turned interferences inside biology into vacant
+    # samples, this is solved by running dilation cycles
     Sv_dilated = Sv_eroded.copy()
     for d in dilate:
         Sv_dilated = dilation(Sv_dilated, np.ones(d))
     
-    # non-vacant values after erosion/dilation are corrected to corresponding
-    # values before erosion/dilation
-    Sv_corrected1 = Sv_dilated.copy()
-    Sv_corrected1[Sv_dilated!=-999] = Sv_thresholded[Sv_dilated!=-999]
+    # dilation has modified the Sv value of biological features, so these are
+    # now corrected to corresponding Sv values before the erosion/dilation
+    Sv_corrected1           = Sv_dilated.copy()
+    mask_bio                = (Sv_dilated>=thr[0]) & (Sv_dilated<thr[1])
+    Sv_corrected1[mask_bio] = Sv_thresholded[mask_bio]
     
-    # vacant values after erosion/dilation are corrected to median-filtered
-    # values before erosion/dilation
-    Sv_median = Sv_thresholded
+    # compute median convolution in Sv corrected array
+    Sv_median = Sv_corrected1.copy()
     for m in median:
-        Sv_median = tolog(medianf(tolin(Sv_median), footprint=np.ones(m)))    
-    Sv_corrected2 = Sv_corrected1.copy()
-    Sv_corrected2[Sv_dilated==-999] = Sv_median[Sv_dilated==-999]
+        Sv_median = tf.log(medianf(tf.lin(Sv_median), footprint=np.ones(m)))
     
-    return Sv_corrected2
+    # any vacant sample inside biological features will be corrected with
+    # the median of corresponding neighbouring samples      
+    Sv_corrected2                       = Sv_corrected1.copy()
+    mask_bio                            = (Sv>=thr[0]) & (Sv<thr[1])
+    mask_vacant                         = Sv_corrected1==-999
+    Sv_corrected2[mask_vacant&mask_bio] = Sv_median[mask_vacant&mask_bio]
+    
+    # get mask indicating the valid samples for Sv_corrected2
+    mask_ = np.zeros_like(Sv_corrected2, dtype=bool)
+    idx   = int((max([e[0], d[0]])-1)/2)
+    jdx   = int((max([e[1], d[1]])-1)/2)
+    mask_[idx:-idx, jdx:-jdx] = True
+    
+    return Sv_corrected2, mask_
 
 def other():
     """
@@ -169,4 +182,3 @@ def other():
         
         Please, check /DESIGN.md to adhere to our coding style.
     """
-    
