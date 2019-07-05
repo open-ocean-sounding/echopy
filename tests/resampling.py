@@ -23,8 +23,8 @@ ek60    = EK60.EK60()
 ek60.read_raw(rawfile)
 
 #------------------------------------------------------------------------------
-# get 38 kHz data
-raw120   = ek60.get_raw_data(channel_number=1)
+# get 120 kHz data
+raw120   = ek60.get_raw_data(channel_number=2)
 Sv120    = np.transpose(raw120.get_Sv().data)
 theta120 = np.transpose(raw120.angles_alongship_e)
 t120     = raw120.get_Sv().ping_time
@@ -60,29 +60,35 @@ theta120rsf, m120rsf_ = rs.full(theta120rs, r120rs, t120  , r120, t120)
 # Figures
 plt.figure(figsize=(8,6))
 
+# Sv original
 plt.subplot(221).invert_yaxis()
 plt.pcolormesh(t120, r120, Sv120, vmin=-80, vmax=-50, cmap=cmaps().ek500)
 plt.tick_params(labelbottom=False)
 plt.ylabel('Depth (m)')
 plt.title('Sv')
 
+# Theta original
 plt.subplot(222).invert_yaxis()
 plt.pcolormesh(t120, r120, theta120, cmap=cmaps().coolwarm)
 plt.tick_params(labelbottom=False)
 plt.tick_params(labelleft=False)
 plt.title('Theta')
 
+# Sv 2D-resampled
 plt.subplot(223).invert_yaxis()
 plt.pcolormesh(t120, r120, Sv120rsf, vmin=-80, vmax=-50, cmap=cmaps().ek500)
 plt.ylabel('Depth (m)')
 plt.xlabel('Time (dd HH:MM)')
-plt.title('Sv resampled')
+plt.title('Sv 2D-resampled')
 
+# Theta vertically resampled
 plt.subplot(224).invert_yaxis()
 plt.pcolormesh(t120, r120, theta120rsf, cmap=cmaps().coolwarm)
 plt.tick_params(labelleft=False)
 plt.xlabel('Time (dd HH:MM)')
-plt.title('Theta resampled')
+plt.title('Theta vertically resampled')
 
+# Show and print
+plt.tight_layout()
 plt.show()
-#plt.savefig('resampling.png', figsize=(8,6), dpi=150)
+plt.savefig('resampling.png', figsize=(8,6), dpi=150)
