@@ -53,18 +53,9 @@ def weill(Sv, thr=-70, maxvgap=5, maxhgap=0, minvlen=0, minhlen=0, start=0):
     Returns:
         bool: 2D mask with shoals identified.
     """
-      
-    # extent Sv to preceeding pings if start is not 0
-    if start==0:
-        Sv_ = Sv.copy()
-    else:        
-        if start>=minhlen:
-            Sv_ = Sv[:, start-minhlen:]
-        else:
-            raise Exception('Not enough room to extent Sv before the start')
-                
+                 
     # mask Sv above threshold
-    mask = Sv_>thr
+    mask = np.ma.masked_greater(Sv, thr).mask
     
     # for each ping in the mask... 
     for jdx, ping in enumerate(list(np.transpose(mask))):    
@@ -99,27 +90,26 @@ def weill(Sv, thr=-70, maxvgap=5, maxhgap=0, minvlen=0, minhlen=0, start=0):
     for label in labels:
             
         # target feature & calculate its maximum vertical/horizontal length
-        feature = masklabelled==label
+        feature     = masklabelled==label
         featurehlen = np.max(np.sum(feature, axis=1))
         featurevlen = np.max(np.sum(feature, axis=0))
         
         # remove feature from mask if its maximum vertical lenght < minvlen
         if featurevlen<minvlen:
-            idx, jdx = np.where(feature)
+            idx, jdx       = np.where(feature)
             mask[idx, jdx] = False
             
         # remove feature from mask if its maximum horizontal lenght < minhlen
         if featurehlen<minhlen:
-            idx, jdx = np.where(feature)
+            idx, jdx       = np.where(feature)
             mask[idx, jdx] = False                    
     
-    # get mask indicating where shoal detection was not feasible (near edges)    
-    mask_ = np.zeros_like(mask)
-    mask_[:, 0:minhlen] = True
-    mask_[:, -minhlen:] = True 
+    # get mask_ indicating the valid samples for mask   
+    mask_                      = np.zeros_like(mask, dtype=bool)
+    mask_[minvlen:len(mask_)-minvlen, minhlen:len(mask_[0])-minhlen] = True
     
     # return masks, from the start ping onwards           
-    return mask[:, start:], mask_[:, start:]
+    return mask, mask_
 
 def other():
     """
