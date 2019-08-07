@@ -9,6 +9,8 @@ import numpy as np
 from echopy.operations import tolin, tolog
 import cv2
 from skimage.morphology import remove_small_objects
+from skimage.morphology import erosion
+from skimage.morphology import dilation
 from scipy.signal import convolve2d
 import scipy.ndimage as nd
 
@@ -180,13 +182,13 @@ def blackwell(Sv, theta, phi, r,
     return mask
 
 def experimental(Sv, r,
-                 r0=10, r1=1000, roff=0, thr=(-30, -70), ns=150, nd=3):
+                 r0=10, r1=1000, roff=0, thr=(-30,-70), ns=150, nd=3):
     """
     Mask Sv above a threshold to get a potential seabed mask. Then, the mask is
     dilated to fill seabed breaches, and small objects are removed to prevent 
     masking high Sv features that are not seabed (e.g. fish schools or spikes).    
     Once this is done, the mask is built up until Sv falls below a 2nd
-    threshold, Finally. the mask is extended all the way down. 
+    threshold, Finally, the mask is extended all the way down. 
     
     Args:
         Sv (float): 2D Sv array (dB).
@@ -243,6 +245,83 @@ def experimental(Sv, r,
 #    mask = cv2.dilate(np.uint8(mask), kernel, iterations = 2)
 #    mask = np.array(mask, dtype = 'bool')
 
+    return mask
+
+def ariza(Sv, r, r0=20, r1=1000, roff=0,
+          thr=-40, ec=1, ek=(1,3), dc=10, dk=(3,7)):
+   
+    """
+    Mask Sv above a threshold to get potential seabed features. These features
+    are eroded first to get rid of fake seabeds (spikes, schools, etc.) and
+    dilated afterwards to fill in seabed breaches. Seabed detection is coarser
+    than other methods (it removes water nearby the seabed) but the seabed line
+    never drops when a breach occurs. Suitable for pelagic assessments and
+    reconmended for non-supervised processing.
+    
+    Args:
+        Sv (float): 2D Sv array (dB).
+        r (float): 1D range array (m).
+        r0 (int): minimum range below which the search will be performed (m). 
+        r1 (int): maximum range above which the search will be performed (m).
+        roff (int): seabed range offset (m).
+        thr (int): Sv threshold above which seabed might occur (dB).
+        ec (int): number of erosion cycles.
+        ek (int): 2-elements tuple with vertical and horizontal dimensions
+                  of the erosion kernel.
+        dc (int): number of dilation cycles.
+        dk (int): 2-elements tuple with vertical and horizontal dimensions
+                  of the dilation kernel.
+           
+    Returns:
+        bool: 2D array with seabed mask.
+    """
+    
+    # get indexes for range offset and range limits
+    r0   = np.nanargmin(abs(r - r0))
+    r1   = np.nanargmin(abs(r - r1))
+    roff = np.nanargmin(abs(r - roff))
+    
+    # set to -999 shallow and deep waters (prevents seabed detection)
+    Sv_ = Sv.copy()
+    Sv_[ 0:r0, :] = -999
+    Sv_[r1:  , :] = -999
+    
+    # return empty mask if there is nothing above threshold
+    if not (Sv_>thr).any():
+        
+        mask = np.zeros_like(Sv_, dtype=bool)
+        return mask
+    
+    # search for seabed otherwise    
+    else:
+        
+        # potential seabed will be everything above the threshold, the rest
+        # will be set as -999
+        seabed          = Sv_.copy()
+        seabed[Sv_<thr] = -999
+        
+        # run erosion cycles to remove fake seabeds (e.g: spikes, small shoals)
+        for i in range(ec):
+            seabed = erosion(seabed, np.ones(ek))
+        
+        # run dilation cycles to fill seabed breaches   
+        for i in range(dc):
+            seabed = dilation(seabed, np.ones(dk))
+        
+        # mask as seabed everything greater than -999 
+        mask = seabed>-999        
+        
+        # if seabed occur in a ping...
+        idx = np.argmax(mask, axis=0)
+        for j, i in enumerate(idx):
+            if i != 0:
+                
+                # ...apply range offset & mask all the way down 
+                i -= roff
+                if i<0:
+                    i = 0
+                mask[i:, j] = True 
+                
     return mask
 
 def bestcandidate():
