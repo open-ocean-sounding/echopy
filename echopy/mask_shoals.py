@@ -113,7 +113,7 @@ def echoview(Sv, idim, jdim,
     """
     Shoals detection algorithm as implemented in echoview.
     
-    Experimental.
+    In progress.
     
     Args:
         Sv      (float    ): 2D array with Sv data (dB)
@@ -131,7 +131,7 @@ def echoview(Sv, idim, jdim,
         bool: 2D array with shoals identified.
         
     Notes:
-        i/j dimensions must be the same in all arguments. For example ig i/j
+        i/j dimensions must be the same in all arguments. For example if i/j
         dimensions refer to range in metres and distance in nautical miles, the
         height and width in mincan, maxlink and minsho might be metres and
         nautical miles as well.
