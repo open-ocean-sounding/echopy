@@ -23,11 +23,11 @@ def ryan(Sv, iax, m, n=1, thr=10):
         72: 2482–2493.
 
     Args:
-        Sv  (float)     : 2D array with Sv data to be masked (dB).
-        iax (int, float): 1D array with i axis data (n samples or range).
-        m   (int, float): vertical binning length (n samples or range).
-        n   (int)       : number of pings either side for comparisons.
-        thr (int,float) : user-defined threshold value (dB).
+        Sv  (float)    : 2D array with Sv data to be masked (dB).
+        iax (int/float): 1D array with i axis data (n samples or range).
+        m   (int/float): vertical binning length (n samples or range).
+        n   (int)      : number of pings either side for comparisons.
+        thr (int/float): user-defined threshold value (dB).
         
     Returns:
         bool: 2D array with IN mask
