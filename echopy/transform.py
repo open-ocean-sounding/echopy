@@ -8,6 +8,8 @@ Created on Tue Jun 25 17:37:06 2019
 """
 
 import numpy as np
+from echopy import resample as rs
+from geopy.distance import distance
 
 def lin(variable):
     """
@@ -47,7 +49,7 @@ def log(variable):
     log[mask]      = -999
     return           log
 
-def Sv2sa(Sv, r, r0, r1, method='mean'):
+def Sv2sa(Sv, r, r0, r1, operation='mean'):
     """
     Compute Area backscattering coefficient (m2 m-2), by integrating Sv in a
     given range interval.
@@ -63,34 +65,22 @@ def Sv2sa(Sv, r, r0, r1, method='mean'):
         float: 1D array with area backscattering coefficient data.
         float: 1D array with the percentage of vertical samples integrated.
     """
-    
-    # get r0 and r1 indexes
-    r0 = np.argmin(abs(r-r0))
-    r1 = np.argmin(abs(r-r1))
-    
-    # get number and height of samples 
-    ns = len(r[r0:r1])
-    sh = np.r_[np.diff(r), np.nan]
-    sh = np.tile(sh.reshape(-1,1), (1,len(Sv[0])))[r0:r1,:]
-    
-    # compute Sa    
-    sv = lin(Sv[r0:r1, :])
-    if method=='mean':    
-        sa = np.nanmean(sv * sh, axis=0) * ns
-    elif method=='sum':
-        sa = np.nansum (sv * sh, axis=0)
-    else:
-        raise Exception('Method not recognised')
-    
-    # compute percentage of valid values (not NAN) behind every sa integration    
-    per = (len(sv) - np.sum(np.isnan(sv*sh), axis=0)) / len(sv) * 100
-    
-    # correct sa with the proportion of valid values
-    sa = sa/(per/100)
+       
+    if operation=='mean':
+        svmean, pc, m_ = rs.oned(lin(Sv), r, np.array([r0, r1]),
+                                 operation='mean')
+        integration_range = r1-r0
+        sa = svmean*integration_range
         
-    return sa, per
+    elif operation=='sum':
+        svsum, pc, m_ = rs.oned(lin(Sv), r, np.array([r0, r1]),
+                                operation='sum')
+        sample_height = (r[-1]-r[0])/len(r)
+        sa = svsum*sample_height
+    
+    return sa, pc, m_
 
-def Sv2NASC(Sv, r, r0, r1, method='mean'):
+def Sv2NASC(Sv, r, r0, r1, operation='mean'):
     """
     Compute Nautical Area Scattering Soefficient (m2 nmi-2), by integrating Sv
     in a given range interval.
@@ -106,7 +96,7 @@ def Sv2NASC(Sv, r, r0, r1, method='mean'):
         float: 1D array with Nautical Area Scattering Coefficient data.
         float: 1D array with the percentage of vertical samples integrated.
     """
-    
+   
     # get r0 and r1 indexes
     r0 = np.argmin(abs(r-r0))
     r1 = np.argmin(abs(r-r1))
@@ -118,9 +108,9 @@ def Sv2NASC(Sv, r, r0, r1, method='mean'):
     
     # compute NASC    
     sv = lin(Sv[r0:r1, :])
-    if method=='mean':    
+    if operation=='mean':    
         NASC = np.nanmean(sv * sh, axis=0) * ns * 4*np.pi*1852**2
-    elif method=='sum':
+    elif operation=='sum':
         NASC = np.nansum (sv * sh, axis=0)      * 4*np.pi*1852**2
     else:
         raise Exception('Method not recognised')
@@ -131,4 +121,60 @@ def Sv2NASC(Sv, r, r0, r1, method='mean'):
     # correct sa with the proportion of valid values
     NASC = NASC/(per/100)
         
-    return NASC, per    
+    return NASC, per
+
+def pos2dis(lon, lat, units='nm'):
+    """
+    Return cumulated distance from longitude and latitude positions, in
+    nautical miles or kilometres.
+    
+    Args:
+        lon (float): 1D array with longitude data (decimal degrees)
+        lat (float): 1D array with latitude data (decimal degrees)
+        units (str): distance unit to return, accepts 'nm' and 'km'
+                     
+    Returns
+        float: 1D array with cumulated distance 
+    """
+
+    # calculate distance
+    dis = np.zeros(len(lon))*np.nan
+    
+    if units=='nm':
+        for i in range(len(dis)-1):
+            if np.isnan(lat[i]) | np.isnan(lon[i]) | np.isnan(lat[i+1]) | np.isnan(lon[i+1]):
+                dis[i] = np.nan
+            else:
+                dis[i] = distance((lat[i], lon[i]), (lat[i+1], lon[i+1])).nm
+    elif units=='km':
+        for i in range(len(dis)-1):
+            if np.isnan(lat[i]) | np.isnan(lon[i]) | np.isnan(lat[i+1]) | np.isnan(lon[i+1]):
+                dis[i] = np.nan
+            else:
+                dis[i] = distance((lat[i], lon[i]), (lat[i+1], lon[i+1])).km
+    else:
+        raise Exception('Units not recognised')
+    
+    # calculate cumulated distance
+    cumdis                = np.nancumsum(dis)
+    cumdis[np.isnan(dis)] = np.nan
+    
+    return cumdis
+
+def dis2speed(t, dis):
+    """
+    Return speed in distance travelled per hour.
+    
+    Args:
+        t   (datetime64[ms]): 1D array with time.
+        dis (float         ): 1D array with distance travelled.
+        
+    Returns:
+        float: 1D array with speed data.
+    """
+    
+    # divide by one hour (=3600 x 1000 milliseconds)
+    speed = np.diff(dis) / (np.float64(np.diff(t))/1000) *3600
+    speed = np.r_[np.nan, speed]
+    
+    return speed
