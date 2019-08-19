@@ -30,8 +30,12 @@ class cmaps():
                  (0.6509, 0.3255, 0.2353), # light brown
                  (0.4705, 0.2353, 0.1568)] # dark brown
         self.ek500 = colors.LinearSegmentedColormap.from_list('ek500', ek500)
-        self.ek500.set_bad(color = 'k', alpha = 1)
+        self.ek500.set_bad(color='k', alpha=1)
         
         # coolwarm colormap with nan values set to black
-        self.cw = cm.coolwarm
-        self.cw.set_bad(color = 'k', alpha = 1)
+        self.coolwarm = cm.coolwarm
+        self.coolwarm.set_bad(color='k', alpha=1)
+        
+        # viridis colormap with nan values set to black
+        self.viridis = cm.viridis
+        self.viridis.set_bad(color='k', alpha=1)
