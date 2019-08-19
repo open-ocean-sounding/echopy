@@ -12,7 +12,7 @@ import numpy as np
 from echopy import transform as tf
 from scipy.interpolate import interp1d
 
-def twod(data, idim, jdim, idimrs, jdimrs, log=False):
+def twod(data, idim, jdim, idimrs, jdimrs, log=False, operation='mean'):
     """
     Resample down an array along the two dimensions, i and j.
     
@@ -24,6 +24,7 @@ def twod(data, idim, jdim, idimrs, jdimrs, log=False):
         jdimrs (float): resampled j horizontal dimension.
         log    (bool ): if True, data is considered logarithmic and it will 
                         be converted to linear during the calculations.
+        operation(str): type of resampling operation. Accepts "mean" or "sum".
                     
     Returns:
         float: 2D resampled data array
@@ -81,37 +82,47 @@ def twod(data, idim, jdim, idimrs, jdimrs, log=False):
             d = data[idx[0]:idx[-1]+1, jdx[0]:jdx[-1]+1]
             w = np.multiply.outer(iweights, jweights)
                       
-            # if d is an all-NAN array, return NAN as the weighted mean and
-            # zero as the percentage of valid numbers used for binning
+            # if d is an all-NAN array, return NAN as the weighted operation
+            # and zero as the percentage of valid numbers used for binning
             if np.isnan(d).all():
                 datars    [i, j] = np.nan
                 percentage[i, j] = 0
             
-            # compute weighted mean and percentage of valid numbers otherwise
+            #compute weighted operation & percentage of valid numbers otherwise
             else:                    
                 w_ = w.copy()
-                w_[np.isnan(d)] = np.nan            
-                datars    [i, j]  = np.nansum(d*w_)/np.nansum(w_)
+                w_[np.isnan(d)] = np.nan
+                if operation=='mean':
+                    datars    [i, j]  = np.nansum(d*w_)/np.nansum(w_)
+                elif operation=='sum':
+                    datars    [i, j]  = np.nansum(d*w_)
+                else:
+                    raise Exception('Operation not recognised')                        
                 percentage[i, j]  = np.nansum(  w_)/np.nansum(w )*100                        
     
     # convert back to logarithmic, if data was logarithmic
     if log is True:
         datars = tf.log(datars)
-        
-    return datars, percentage
+    
+    # get mask_ indicating valid values of datars and percentage
+    mask_           = np.zeros_like(datars, dtype=bool)
+    mask_[:-1, :-1] = True
+    
+    return datars, percentage, mask_
 
-def oned(data, dim, dimrs, log=False):
+def oned(data, dim, dimrs, log=False, operation='mean'):
     """
     Resample down an array along i or j dimension. "Dim" length must be equal
     to either i or j data length, so the algorithm can work out the resampling
     dimension to proceed.
     
     Args:
-        data  (float): 2D array with data to be resampled.
-        dim   (float): original dimension.
-        dimrs (float): resampled dimension.
-        log   (bool ): if True, data is considered logarithmic and it will 
-                       be converted to linear during the calculations.
+        data  (float) : 2D array with data to be resampled.
+        dim   (float) : original dimension.
+        dimrs (float) : resampled dimension.
+        log   (bool ) : if True, data is considered logarithmic and it will 
+                        be converted to linear during the calculations.
+        operation(str): type of resampling operation. Accepts "mean" or "sum".
                     
     Returns:
         float: 2D resampled data array
@@ -161,24 +172,33 @@ def oned(data, dim, dimrs, log=False):
             d = data[idx[0]:idx[-1]+1, :]
             w = np.multiply.outer(iweights, np.ones(len(data[0])))
                       
-            # if d is an all-NAN array, return NAN as the weighted mean and
-            # zero as the percentage of valid numbers used for binning
+            # if d is an all-NAN array, return NAN as the weighted operation
+            # and zero as the percentage of valid numbers used for binning
             if np.isnan(d).all():
                 datars    [i, :] = np.nan
                 percentage[i, :] = 0
             
-            # compute weighted mean and percentage valid numbers otherwise
+            # compute weighted operation and percentage valid numbers otherwise
             else:
                 w_             =w.copy()
-                w_[np.isnan(d)]=np.nan            
-                datars    [i,:]=np.nansum(d*w_,axis=0)/np.nansum(w_,axis=0)
+                w_[np.isnan(d)]=np.nan
+                if operation=='mean':
+                    datars    [i,:]=np.nansum(d*w_,axis=0)/np.nansum(w_,axis=0)
+                elif operation=='sum':
+                    datars    [i,:]= np.nansum(d*w_,axis=0)
+                else:
+                    raise Exception('Operation not recognised')
                 percentage[i,:]=np.nansum(w_  ,axis=0)/np.nansum(w ,axis=0)*100                        
         
         # convert back to logarithmic, if data was logarithmic
         if log is True:
             datars = tf.log(datars)
-            
-        return datars, percentage
+        
+        # get mask_ indicating valid values of datars and percentage
+        mask_         = np.zeros_like(datars, dtype=bool)
+        mask_[:-1, :] = True
+        
+        return datars, percentage, mask_
     
     # proceed along j dimension
     if resampling_dimension==1:
@@ -207,24 +227,34 @@ def oned(data, dim, dimrs, log=False):
             d = data[:, jdx[0]:jdx[-1]+1]
             w = np.multiply.outer(np.ones(len(data)), jweights)
                       
-            # if d is an all-NAN array, return NAN as the weighted mean and
-            # zero as the percentage of valid numbers used for resampling
+            # if d is an all-NAN array, return NAN as the weighted operation
+            # and zero as the percentage of valid numbers used for resampling
             if np.isnan(d).all():
                 datars    [:, j] = np.nan
                 percentage[:, j] = 0
             
-            # compute weighted mean and percentage valid numbers otherwise
+            # compute weighted operation and percentage valid numbers otherwise
             else:
                 w_             =w.copy()
-                w_[np.isnan(d)]=np.nan            
-                datars    [:,j]=np.nansum(d*w_,axis=1)/np.nansum(w_,axis=1)
+                w_[np.isnan(d)]=np.nan
+                if operation=='mean':
+                    datars    [:,j]=np.nansum(d*w_,axis=1)/np.nansum(w_,axis=1)
+                elif operation=='sum':
+                    datars    [:,j]=np.nansum(d*w_,axis=1)
+                else:
+                    raise Exception('Operation not recognised')
+                        
                 percentage[:,j]=np.nansum(w_  ,axis=1)/np.nansum(w ,axis=1)*100                        
         
         # convert back to logarithmic, if data was logarithmic
         if log is True:
             datars = tf.log(datars)
-            
-        return datars, percentage
+        
+        # get mask_ indicating valid values of datars and percentage
+        mask_         = np.zeros_like(datars, dtype=bool)
+        mask_[:, :-1] = True
+        
+        return datars, percentage, mask_
 
 def full(datars, idimrs, jdimrs, idim, jdim):
     """
