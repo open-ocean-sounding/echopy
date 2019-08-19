@@ -6,7 +6,7 @@ Created on Fri Apr 27 14:45:59 2018
 @author: Alejandro Ariza, British Antarctic Survey
 """
 import numpy as np
-from echopy.operations import tolin, tolog
+from echopy.transform import lin, log
 import cv2
 from skimage.morphology import remove_small_objects
 from skimage.morphology import erosion
@@ -58,7 +58,7 @@ def maxSv(Sv, r, r0=10, r1=1000, roff=0, thr=(-40, -60)):
             if np.isnan(Sv[i-5:i, j]).all():
                 Svmean = thr[1]+1
             else:      
-                Svmean = tolog(np.nanmean(tolin(Sv[i-5:i, j])))
+                Svmean = log(np.nanmean(lin(Sv[i-5:i, j])))
             
             while (Svmean>thr[1]) & (i>=5):
                 i -= 1
@@ -160,7 +160,7 @@ def blackwell(Sv, theta, phi, r,
     anglemaskchunk = thetamaskchunk | phimaskchunk
         
     # if aliased seabed, mask Sv above the Sv median of angle-masked regions
-    Svmaskchunk = Svchunk > tolog(np.nanmedian(tolin(Svchunk[anglemaskchunk])))
+    Svmaskchunk = Svchunk > log(np.nanmedian(lin(Svchunk[anglemaskchunk])))
     
     # label connected features in Svmaskchunk  
     f = nd.label(Svmaskchunk, nd.generate_binary_structure(2,2))[0]
@@ -231,7 +231,7 @@ def experimental(Sv, r,
         if i != 0:
             
             # rise up seabed until Sv falls below the 2nd threshold
-            while (tolog(np.nanmean(tolin(Sv[i-5:i, j]))) > thr[1]) & (i>=5):
+            while (log(np.nanmean(lin(Sv[i-5:i, j]))) > thr[1]) & (i>=5):
                 i -= 1
                    
             # subtract range offset & mask all the way down 
