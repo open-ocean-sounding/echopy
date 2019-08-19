@@ -7,7 +7,8 @@ Created on Fri Apr 27 14:18:05 2018
 """
 
 import numpy as np
-from echopy.operations import tolin, tolog
+from echopy.operations import tolin, tolog, bin2d, bin2dback
+from skimage.measure import label
 
 def ryan(Sv, r, r0, r1, n, thr, start=0):
     """
@@ -75,6 +76,61 @@ def ryan(Sv, r, r0, r1, n, thr, start=0):
          
     return [mask[:, start:], mask_[:, start:]]
 
+def ariza_seabed(Sv, r, offset=20, thr=(-40,-35), m=20, n=50):
+    """
+    Mask attenuated pings by looking at seabed breaches.
+    
+    Ariza (in progress).
+    """
+    
+    # get ping array
+    p = np.arange(len(Sv[0]))
+    
+    # set to NaN shallow waters and data below the Sv threshold
+    Sv_ = Sv.copy()
+    Sv_[0:np.nanargmin(abs(r - offset)), :] = np.nan
+    Sv_[Sv_<-thr[0]] = np.nan
+    
+    # bin Sv    
+    Sv_bnd, r_bnd, p_bnd = bin2d(Sv_, r, p, m, n, operation='mean')[0:3]
+    Sv_bnd = bin2dback(Sv_bnd, r_bnd, p_bnd, r, p)
+    
+    # label binned Sv data features
+    Sv_lbl = label(~np.isnan(Sv_bnd))
+    labels = np.unique(Sv_lbl)
+    labels = np.delete(labels, np.where(labels==0))
+    
+    # list the median values for each Sv feature
+    val = []
+    for lbl in labels:
+        val.append(tolog(np.nanmedian(tolin(Sv_bnd[Sv_lbl==lbl]))))
+    
+    # keep the feature with a median above the Sv threshold (~seabed)
+    # and set the rest of the array to NaN
+    if val:
+        if np.nanmax(val)>thr[1]:
+            labels = labels[val!=np.nanmax(val)]
+            for lbl in labels:
+                Sv_bnd[Sv_lbl==lbl] = np.nan
+        else:
+            Sv_bnd[:] = np.nan
+    else:
+        Sv_bnd[:] = np.nan
+        
+    # remove everything in the original Sv array that is not seabed
+    Sv_sb = Sv.copy()
+    Sv_sb[np.isnan(Sv_bnd)] = np.nan
+    
+    # compute the percentile 90th for each ping, at the range at which 
+    # the seabed is supposed to be.    
+    seabed_percentile = tolog(np.nanpercentile(tolin(Sv_sb), 95, axis=0))
+    
+    # get mask where this value falls bellow a Sv threshold (seabed breaches)
+    mask = seabed_percentile<thr[0]
+    mask = np.tile(mask, [len(Sv), 1])    
+    
+    return mask
+    
 def other():
     """
     Note to contributors:
