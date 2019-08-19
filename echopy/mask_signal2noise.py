@@ -8,7 +8,7 @@ Created on Thu Jul  5 14:13:15 2018
 """
 
 import numpy as np
-from echopy.operations import tolin, tolog
+from echopy import transform as tf
 
 def derobertis(Sv, bgn, thr):
     """
@@ -29,14 +29,14 @@ def derobertis(Sv, bgn, thr):
     """
     
     # subtract background noise
-    Svclean = tolog(tolin(Sv) - tolin(bgn))
+    Svclean = tf.log(tf.lin(Sv) - tf.lin(bgn))
     
     # signal to noise ratio
     s2n = Svclean - bgn
     
     # mask where Sv is less than background noise by a user-defined threshold
     mask1 = np.ma.masked_less(s2n, thr).mask
-    mask2 = np.ma.masked_less(tolin(Sv) - tolin(bgn), 0).mask
+    mask2 = np.ma.masked_less(tf.lin(Sv) - tf.lin(bgn), 0).mask
     mask = mask1| mask2
     
     return mask
