@@ -65,8 +65,8 @@ def ices(calfile, frequency):
     params.equivalent_beam_angle    = np.float64(data['psi']                       ) # dB
     params.angle_beam_athwartship   = np.float64(data['beam_angle_major']          ) # deg
     params.angle_beam_alongship     = np.float64(data['beam_angle_minor']          ) # deg
-    params.angle_offset_athwartship = np.float64(data['beam_angle_major_offset']   ) # deg  
-    params.angle_offset_alongship   = np.float64(data['beam_angle_minor_offset']   ) # deg
+    params.angle_offset_athwartship = np.float64(data['beam_angle_offset_major']   ) # deg  
+    params.angle_offset_alongship   = np.float64(data['beam_angle_offset_minor']   ) # deg
         
     return params
  
