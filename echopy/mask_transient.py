@@ -7,7 +7,7 @@ Created on Fri Apr 27 14:23:34 2018
 """
 
 import numpy as np
-from echopy.operations import tolin, tolog
+from echopy.transform import lin, log
 
 def ryan(Sv, r, m, n, thr,
          excludeabove=250, operation='percentile15'):
@@ -56,7 +56,7 @@ def ryan(Sv, r, m, n, thr,
             # proceed only if enough room for setting the block
             if (i-ioff >= 0) & (i+ioff < len(Sv)) & (j-joff >= 0) & (j+joff < len(Sv[0])):               
                 sample = Sv[i, j]
-                block = tolog(np.nanpercentile(tolin(Sv[i-ioff : i+ioff ,j-joff : j+joff]), int(operation[-2:])))           
+                block = log(np.nanpercentile(lin(Sv[i-ioff : i+ioff ,j-joff : j+joff]), int(operation[-2:])))           
                 mask[i, j] = sample - block > thr
         
     return mask
@@ -120,15 +120,15 @@ def fielding(Sv, r, r0, n, thr,
         
         # evaluate ping and block medians otherwise
         else:
-            pingmedian  = tolog(np.nanmedian(tolin(Sv[up:lw, j])))
-            blockmedian = tolog(np.nanmedian(tolin(Sv[up:lw, j-n:j+n])))
+            pingmedian  = log(np.nanmedian(lin(Sv[up:lw, j])))
+            blockmedian = log(np.nanmedian(lin(Sv[up:lw, j-n:j+n])))
             
             # if too different, mask all the way up until noise dissapears
             if (pingmedian-blockmedian)>thr[0]:                                    
                 r0, r1 = up-sf, up
                 while r0>rmin:
-                    pingmedian = tolog(np.nanmedian(tolin(Sv[r0:r1, j])))
-                    blockmedian= tolog(np.nanmedian(tolin(Sv[r0:r1, j-n:j+n])))
+                    pingmedian = log(np.nanmedian(lin(Sv[r0:r1, j])))
+                    blockmedian= log(np.nanmedian(lin(Sv[r0:r1, j-n:j+n])))
                     r0, r1 = r0-sf, r1-sf                        
                     if (pingmedian-blockmedian)<thr[1]:
                         break                    
