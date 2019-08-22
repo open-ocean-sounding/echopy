@@ -10,6 +10,32 @@ Created on Tue Jul 17 12:18:51 2018
 import numpy as np
 import toml
 
+def environment(file, transect):
+    """
+    Read environmental metadata, temperature and salinity, from the file
+    "transects.toml".
+    
+    Args:
+        file     (str): path to transects.toml.
+        transect (str): Name of transect.
+        
+    Returns:
+        float: Temperature (degrees Celsius)
+        float: Salinity    (PSU)
+    """
+
+    data     = toml.load(file)
+    try:
+        data = [x for x in data['transect'] if x['name']==transect][0]
+    except IndexError:
+        raise Exception('Transect name doesn\'t exist')    
+    
+    temperature = data['temperature']
+    salinity    = data['salinity']
+    
+    return temperature, salinity
+        
+
 def ices(calfile, frequency):
     """
     Read calibration parameters from a ICES metadata toml file 
@@ -29,18 +55,18 @@ def ices(calfile, frequency):
     data = [x for x in data['data_processing'] if x['frequency'] == frequency][0]
     
     # populate params object with data_processing attributes
-    params.frequency = np.float64(data['frequency']*1000) # Hz
-    params.transmit_power = np.float64(data['transceiver_power']) # watts
-    params.pulse_length = np.float64(data['transmit_pulse_length']/1000) # s
-    params.gain =  np.float64(data['on_axis_gain']) # dB
-    params.sa_correction = np.float64(data['Sacorrection']) # dB   
-    params.absorption_coefficient = np.float64(data['absorption']) # dB m-1
-    params.sound_velocity = np.float64(data['soundspeed']) # m s-1
-    params.equivalent_beam_angle = np.float64(data['psi']) # dB
-    params.angle_beam_athwartship = np.float64(data['beam_angle_major']) # deg
-    params.angle_beam_alongship = np.float64(data['beam_angle_minor']) # deg
-    params.angle_offset_athwartship = np.float64(data['beam_angle_offset_major']) # deg  
-    params.angle_offset_alongship = np.float64(data['beam_angle_offset_minor']) # deg
+    params.frequency                = np.float64(data['frequency']*1000            ) # Hz
+    params.transmit_power           = np.float64(data['transceiver_power']         ) # watts
+    params.pulse_length             = np.float64(data['transmit_pulse_length']/1000) # s
+    params.gain                     = np.float64(data['on_axis_gain']              ) # dB
+    params.sa_correction            = np.float64(data['Sacorrection']              ) # dB   
+    params.absorption_coefficient   = None                                           # dB m-1
+    params.sound_velocity           = None                                           # m s-1
+    params.equivalent_beam_angle    = np.float64(data['psi']                       ) # dB
+    params.angle_beam_athwartship   = np.float64(data['beam_angle_major']          ) # deg
+    params.angle_beam_alongship     = np.float64(data['beam_angle_minor']          ) # deg
+    params.angle_offset_athwartship = np.float64(data['beam_angle_major_offset']   ) # deg  
+    params.angle_offset_alongship   = np.float64(data['beam_angle_minor_offset']   ) # deg
         
     return params
  
