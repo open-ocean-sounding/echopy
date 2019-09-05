@@ -66,7 +66,7 @@ This allows for installation using `pip install echopy`.
 
 ## Contributors
 * **Robert Blackwell** - *British Antarctic Survey* - [RobertBlackwell](https://github.com/RobBlackwell)
-* **Sophie Fielding** - *British Antarctic Survey* 
+* **Sophie Fielding** - *British Antarctic Survey* - [SophieFielding](https://github.com/bas-sof)
 
 ## Acknowledgements
 
