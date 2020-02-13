@@ -86,5 +86,5 @@ This software is licensed under the MIT License - see the
 
 ## Contact
 
-* [Alejandro Ariza](mailto:aletea@bas.ac.uk)
+* [Alejandro Ariza](mailto:alejandro.ariza@ird.fr)
 
