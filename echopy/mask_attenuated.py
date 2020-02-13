@@ -7,7 +7,8 @@ Created on Fri Apr 27 14:18:05 2018
 """
 
 import numpy as np
-from echopy.operations import tolin, tolog, bin2d, bin2dback
+from echopy.transform import lin, log
+from echopy.resample import twod, full
 from skimage.measure import label
 
 def ryan(Sv, r, r0, r1, n, thr, start=0):
@@ -63,14 +64,14 @@ def ryan(Sv, r, r0, r1, n, thr, start=0):
             # versions will have layer boundaries with variable range
             # (need to implement mask_layer.py beforehand!)
         
-        # mask where TN evaluation is unfeasible (e.g. edge issues, all-NANs)
+        # mask where AS evaluation is unfeasible (e.g. edge issues, all-NANs)
         if (j-n<0) | (j+n>len(Sv[0])-1) | np.all(np.isnan(Sv[up:lw, j])):        
             mask_[:, j] = True
         
         # compare ping and block medians otherwise & mask ping if too different
         else:
-            pingmedian  = tolog(np.nanmedian(tolin(Sv[up:lw, j])))
-            blockmedian = tolog(np.nanmedian(tolin(Sv[up:lw, (j-n):(j+n)])))
+            pingmedian  = log(np.nanmedian(lin(Sv[up:lw, j])))
+            blockmedian = log(np.nanmedian(lin(Sv[up:lw, (j-n):(j+n)])))
             if (pingmedian-blockmedian)<thr:            
                 mask[:, j] = True
          
@@ -91,7 +92,8 @@ def ariza_seabed(Sv, r, offset=20, thr=(-40,-35), m=20, n=50):
     Sv_[0:np.nanargmin(abs(r - offset)), :] = np.nan
     Sv_[Sv_<-thr[0]] = np.nan
     
-    # bin Sv    
+    # bin Sv
+    # TODO: update to 'twod' and 'full' funtions    
     Sv_bnd, r_bnd, p_bnd = bin2d(Sv_, r, p, m, n, operation='mean')[0:3]
     Sv_bnd = bin2dback(Sv_bnd, r_bnd, p_bnd, r, p)
     
@@ -103,7 +105,7 @@ def ariza_seabed(Sv, r, offset=20, thr=(-40,-35), m=20, n=50):
     # list the median values for each Sv feature
     val = []
     for lbl in labels:
-        val.append(tolog(np.nanmedian(tolin(Sv_bnd[Sv_lbl==lbl]))))
+        val.append(log(np.nanmedian(lin(Sv_bnd[Sv_lbl==lbl]))))
     
     # keep the feature with a median above the Sv threshold (~seabed)
     # and set the rest of the array to NaN
@@ -123,7 +125,7 @@ def ariza_seabed(Sv, r, offset=20, thr=(-40,-35), m=20, n=50):
     
     # compute the percentile 90th for each ping, at the range at which 
     # the seabed is supposed to be.    
-    seabed_percentile = tolog(np.nanpercentile(tolin(Sv_sb), 95, axis=0))
+    seabed_percentile = log(np.nanpercentile(lin(Sv_sb), 95, axis=0))
     
     # get mask where this value falls bellow a Sv threshold (seabed breaches)
     mask = seabed_percentile<thr[0]
