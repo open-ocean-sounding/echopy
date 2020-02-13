@@ -6,6 +6,7 @@ Created on Fri Apr 27 14:28:57 2018
 @author: Alejandro Ariza, British Antarctic Survey
 """
 
+import warnings
 import numpy as np
 from echopy import resample as rs
 
@@ -40,25 +41,36 @@ def derobertis(Sv, iax, jax, m, n, r, alpha, bgnmax=-125):
     # subtract TVG from Sv  
     Sv_noTVG = Sv - np.vstack(TVG)
     
-    # resample Sv_noTVG into m by n bins    
+    # get resampled i/j axes    
     iaxrs       = np.arange(iax[0], iax[-1], m)
     jaxrs       = np.arange(jax[0], jax[-1], n)
-    Sv_noTVGrs  = rs.twod(Sv_noTVG, iax, jax, iaxrs, jaxrs, log=True)[0]
     
-    # compute background noise as the minimun value per interval in Sv_noTVGrs
-    jbool                = np.isnan(Sv_noTVGrs).all(axis=0)
-    Sv_noTVGrs [:,jbool] = 0
-    bgn_noTVGrs          = np.nanmin(Sv_noTVGrs, 0)
-    bgn_noTVGrs[  jbool] = np.nan
-    bgn_noTVGrs          = np.tile(bgn_noTVGrs, [len(Sv_noTVGrs), 1])
+    # proceed if length of resampled axes is greater than 1 
+    if (len(iaxrs)>1) & (len(jaxrs)>1):
+    
+        # resample Sv_noTVG into m by n bins
+        Sv_noTVGrs  = rs.twod(Sv_noTVG, iax, jax, iaxrs, jaxrs, log=True)[0]
         
-    # Prevent to exceed the maximum background noise expected
-    mask              = np.ma.masked_greater(bgn_noTVGrs, bgnmax).mask
-    bgn_noTVGrs[mask] = bgnmax
+        # compute background noise as the minimun value per interval in Sv_noTVGrs
+        jbool                = np.isnan(Sv_noTVGrs).all(axis=0)
+        Sv_noTVGrs [:,jbool] = 0
+        bgn_noTVGrs          = np.nanmin(Sv_noTVGrs, 0)
+        bgn_noTVGrs[  jbool] = np.nan
+        bgn_noTVGrs          = np.tile(bgn_noTVGrs, [len(Sv_noTVGrs), 1])
+            
+        # Prevent to exceed the maximum background noise expected
+        mask              = np.ma.masked_greater(bgn_noTVGrs, bgnmax).mask
+        bgn_noTVGrs[mask] = bgnmax
+        
+        # resample background noise to previous Sv resolution, and add TVG
+        bgn_noTVG, mask_ = rs.full(bgn_noTVGrs, iaxrs, jaxrs, iax, jax)
+        bgn              = bgn_noTVG + np.vstack(TVG)
     
-    # resample background noise to previous Sv resolution, and add TVG
-    bgn_noTVG, mask_ = rs.full(bgn_noTVGrs, iaxrs, jaxrs, iax, jax)
-    bgn              = bgn_noTVG + np.vstack(TVG)
+    # return background noise as NAN values otherwise    
+    else:
+        bgn   = np.zeros_like(Sv)*np.nan
+        mask_ = np.ones_like(Sv, dtype=bool)
+        warnings.warn("unable to estimate background noise, incorrect resampling axes", RuntimeWarning)
     
     return bgn, mask_
 
