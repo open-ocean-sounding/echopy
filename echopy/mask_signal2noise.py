@@ -55,7 +55,15 @@ def fielding(bgn, thr=-80):
         bool: 2D array mask (background noise < expeted target Sv = True) 
     """
     
-    return np.ma.masked_greater(bgn, thr).mask
+    # mask indicating where masking is unfeasible due to NAN values
+    mask_ = np.isnan(bgn)
+    
+    # nask where bgn is above the minimum value expected
+    bgn_ = bgn.copy()             
+    bgn_[mask_] = np.inf      
+    mask = bgn_>thr
+    
+    return mask, mask_
 
 def other():
     """   
