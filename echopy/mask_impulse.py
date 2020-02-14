@@ -47,10 +47,12 @@ def ryan(Sv, iax, m, n=1, thr=10):
     comparison_forward  = Sv_ - np.c_[Sv_[:, n:], dummy]
     comparison_backward = Sv_ - np.c_[dummy, Sv_[:, 0:-n]]
     
-    # get IN mask
-    maskf = np.ma.masked_greater(comparison_forward , thr).mask
-    maskb = np.ma.masked_greater(comparison_backward, thr).mask
-    mask  = maskf & maskb
+    # get IN mask            
+    comparison_forward[np.isnan(comparison_forward)] = np.inf 
+    maskf = comparison_forward>thr               
+    comparison_backward[np.isnan(comparison_backward)] = np.inf 
+    maskb = comparison_backward>thr
+    mask  = maskf & maskb   
     
     # get second mask indicating valid samples in IN mask    
     mask_[:, 0:n] = False
