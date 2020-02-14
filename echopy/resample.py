@@ -32,6 +32,10 @@ def twod(data, idim, jdim, idimrs, jdimrs, log=False, operation='mean'):
     """ 
     
     # check coherence in arrays dimensions
+    if len(idimrs)<2:
+        raise Exception('length of resampled i vertical dimension must be greater than 2')
+    if len(jdimrs)<2:
+        raise Exception('length of resampled j horizontal dimension must be greater than 2')
     if len(data)!=len(idim):
         raise Exception('data rows and i dimension length must be the same')
     if len(data[0])!=len(jdim):
@@ -63,7 +67,10 @@ def twod(data, idim, jdim, idimrs, jdimrs, log=False, operation='mean'):
         # get i weights as the sum of the sample proportions taken
         iweight0 = 1 - abs(iax[idx0]-iaxrs[i+0])
         iweight1 = abs(iax[idx1]-iaxrs[i+1])
-        iweights = np.r_[iweight0, np.ones(len(idx)-2), iweight1]
+        if len(idx)>1:
+            iweights = np.r_[iweight0, np.ones(len(idx)-2), iweight1]
+        else:
+            iweights = np.array([iweight0-1 + iweight1])
         
         # iterate along-pings
         for j in range(len(jaxrs)-1):
@@ -76,8 +83,11 @@ def twod(data, idim, jdim, idimrs, jdimrs, log=False, operation='mean'):
             # get j weights as the sum of the sample proportions taken
             jweight0 = 1 - abs(jax[jdx0]-jaxrs[j+0])
             jweight1 = abs(jax[jdx1]-jaxrs[j+1])
-            jweights = np.r_[jweight0, np.ones(len(jdx)-2), jweight1]
-            
+            if len(jdx)>1:
+                jweights = np.r_[jweight0, np.ones(len(jdx)-2), jweight1]
+            else:
+                jweights = np.array([jweight0-1 + jweight1])
+                            
             # get data and weight 2D matrices for the binning operation
             d = data[idx[0]:idx[-1]+1, jdx[0]:jdx[-1]+1]
             w = np.multiply.outer(iweights, jweights)
@@ -129,6 +139,10 @@ def oned(data, dim, dimrs, log=False, operation='mean'):
         float: 2D array with percentage of samples used in every resampled bin.
     """
     
+    # check if appropiate resampled dimension
+    if len(dimrs)<2:
+        raise Exception('length of resampled dimension must be greater than 2')
+
     # find out resampling dimension
     if len(data)==len(dim):
         resampling_dimension=0        
@@ -166,7 +180,10 @@ def oned(data, dim, dimrs, log=False, operation='mean'):
             # get i weights as the sum of the proportions of samples taken
             iweight0 = 1 - abs(iax[idx0]-iaxrs[i+0])
             iweight1 = abs(iax[idx1]-iaxrs[i+1])
-            iweights = np.r_[iweight0, np.ones(len(idx)-2), iweight1]
+            if len(idx)>1:
+                iweights = np.r_[iweight0, np.ones(len(idx)-2), iweight1]
+            else:
+                iweights = np.array([iweight0-1 + iweight1])
                 
             # get data and weight 2D matrices for the resampling operation
             d = data[idx[0]:idx[-1]+1, :]
@@ -221,7 +238,10 @@ def oned(data, dim, dimrs, log=False, operation='mean'):
             # get j weights as the sum of the proportions of samples taken
             jweight0 = 1 - abs(jax[jdx0]-jaxrs[j+0])
             jweight1 = abs(jax[jdx1]-jaxrs[j+1])
-            jweights = np.r_[jweight0, np.ones(len(jdx)-2), jweight1]
+            if len(jdx)>1:
+                jweights = np.r_[jweight0, np.ones(len(jdx)-2), jweight1]
+            else:
+                jweights = np.array([jweight0-1 + jweight1])
                 
             # get data and weight 2D matrices for the resampling operation
             d = data[:, jdx[0]:jdx[-1]+1]
@@ -275,6 +295,10 @@ def full(datars, idimrs, jdimrs, idim, jdim):
     """
     
     # check coherence in arrays dimensions
+    if len(idimrs)<2:
+        raise Exception('i dimension length must be greater than 2')
+    if len(jdimrs)<2:
+        raise Exception('j dimension length must be greater than 2')
     if len(datars)!=len(idimrs):
         raise Exception('data rows and i dimension length must be the same')
     if len(datars[0])!=len(jdimrs):
@@ -331,7 +355,7 @@ def full(datars, idimrs, jdimrs, idim, jdim):
     mask_ = np.zeros_like(data, dtype=bool)
     i1= np.where(iax<iaxrs[-1])[0][-1] + 1
     j1= np.where(jax<jaxrs[-1])[0][-1] + 1
-    mask_[:i1, :j1] = True
+    mask_[i1:, j1:] = True
     
     return data, mask_
 
@@ -342,7 +366,7 @@ def dim2ax(dim, ax, dimrs):
     
     Args:
         dim   (float): 1D array with original dimension.
-        as    (int  ): 1D array with original axis.
+        ax    (int  ): 1D array with original axis.
         dimrs (float): 1D array with resampled dimension.
     
     Returns:
