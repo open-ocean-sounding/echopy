@@ -61,8 +61,7 @@ def ryan(Sv, r, m, n, thr,
         
     return mask
 
-def fielding(Sv, r, r0, n, thr,
-             excludeabove=250, jumps=5, start=0):
+def fielding(Sv, r, r0, r1, n, thr, roff, jumps=5, maxts=-35, start=0):
     """
     Mask transient noise with method proposed by Fielding et al (unpub.).
     
@@ -85,26 +84,29 @@ def fielding(Sv, r, r0, n, thr,
     with a secondary threshold or until it gets the exclusion range depth.
     
     Args:
-        Sv (float): 2D array with Sv data to be masked (dB).
-        r (float): 1D array with range data (m).
-        r0 (int):  range below which the filter evaluates transient noise (m).
-        n (int): number of preceding & subsequent pings defining the block.
-        thr (int): user-defined threshold for side-comparisons (dB).
-        excludeabove (int): range above which masking is excluded (m).
-        jumps (int): height of vertical steps (m).
-        start (int): ping index to start processing.
+        Sv    (float): 2D numpy array with Sv data to be masked (dB).
+        r     (float): 1D numpy array with range data (m).
+        r0    (int  ): range below which transient noise is evaluated (m).
+        r1    (int  ): range above which transient noise is evaluated (m).
+        n     (int  ): n of preceeding & subsequent pings defining the block.
+        thr   (int  ): user-defined threshold for side-comparisons (dB).
+        roff  (int  ): range above which masking is excluded (m).
+        maxts (int  ): max transient noise permited, prevents to interpret 
+                       seabed as transient noise (dB). 
+        jumps (int  ): height of vertical steps (m).
+        start (int  ): ping index to start processing.
         
     Returns:
         list: 2D boolean array with TN mask and 2D boolean array with mask
               indicating where TN detection was unfeasible.
     """               
         
-    # get upper and lower range indexes
-    up = np.argmin(abs(r - (max(r) - r0)))
-    lw = np.argmax(r)
+    # get upper and lower range indexes   
+    up = np.argmin(abs(r - r0))
+    lw = np.argmin(abs(r - r1))
     
     # get minimum range index admitted for processing
-    rmin = np.argmin(abs(r - excludeabove))
+    rmin = np.argmin(abs(r - roff))
     
     # get scaling factor index
     sf = np.argmin(abs(r - jumps))     
@@ -118,13 +120,15 @@ def fielding(Sv, r, r0, n, thr,
         if (j-n<0) | (j+n>len(Sv[0])-1) | np.all(np.isnan(Sv[up:lw, j])):        
             mask_[:, j] = True
         
-        # evaluate ping and block medians otherwise
+        # evaluate ping and block averages otherwise
         else:
             pingmedian  = log(np.nanmedian(lin(Sv[up:lw, j])))
+            pingp75     = log(np.nanpercentile(lin(Sv[up:lw, j]), 75))
             blockmedian = log(np.nanmedian(lin(Sv[up:lw, j-n:j+n])))
             
-            # if too different, mask all the way up until noise dissapears
-            if (pingmedian-blockmedian)>thr[0]:                                    
+            # if ping median below 'maxts' permited, and above enough from the
+            # block median, mask all the way up until noise dissapears
+            if (pingp75<maxts) & ((pingmedian-blockmedian)>thr[0]):                                    
                 r0, r1 = up-sf, up
                 while r0>rmin:
                     pingmedian = log(np.nanmedian(lin(Sv[r0:r1, j])))
