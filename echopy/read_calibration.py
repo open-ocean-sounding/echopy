@@ -70,18 +70,146 @@ def ices(calfile, frequency):
         
     return params
  
-def lobes(calfile, channel):
+def lobes(file):
     """
-    Read calibration parameters from a SIMRAD lobes calibration file
+    Reads LOBES calibration text files and returns variables.
     
-    Args:
-        calfile (str): path/to/calibration_file.
-        channel (int): channel you want to read.
-                
-    Returns:
-        object with calibration parameters
+    Parameters
+    ----------
+    file: str
+        path/to/lobes/calibration/file.txt
+
+    Returns
+    -------
+    d: dict
+        Contains data variables from the calibration LOBES file.
+
     """
-    # TODO: 
+    
+    # open LOBES calibration file and extract variables, line by line
+    d = {}
+    f = open(file, 'r')    
+    while 1:
+        l = f.readline()
+        if not ('#' in l[0]):
+            break
+        
+        if '#  Calibration  Version' in l:
+            d['calibration_version'] = l.strip('#  Calibration  Version').strip()
+            
+        if '#  Date:' in l:
+            d['calibration_date'] = l.strip('#  Date:').strip()
+        
+        if '#  Comments:' in l:
+            l = f.readline()
+            d['calibration_coments'] = l.strip('#').strip()
+            
+        if '#  Reference Target:' in l:
+            l = f.readline()
+            d['reference_TS']           = float(l.split()[2])
+            d['reference_min_distance'] = float(l.split()[6])
+            l = f.readline()
+            d['reference_TS_deviation'] = float(l.split()[3])
+            d['reference_max_distance'] = float(l.split()[7])
+                    
+        if '#  Transducer:' in l:
+            d['instrument_transducer_model']                        = l.split()[2]
+            d['instrument_transducer_serial']                       = l.split()[5]        
+            l = f.readline()
+            d['instrument_transducer_frequency']                    = int(l.split()[2])/1e3
+            d['instrument_transducer_beam_type']                    = l.split()[5]        
+            l = f.readline()
+            d['instrument_transducer_gain']                         = float(l.split()[2])
+            d['instrument_transducer_psi']                          = float(l.split()[8])        
+            l = f.readline()
+            d['instrument_transducer_beam_angle_major_sensitivity'] = float(l.split()[4])
+            d['instrument_transducer_beam_angle_minor_sensitivity'] = float(l.split()[8])                
+            l = f.readline()
+            d['instrument_transducer_beam_angle_major']             = float(l.split()[4])
+            d['instrument_transducer_beam_angle_minor']             = float(l.split()[9])        
+            l = f.readline()
+            d['instrument_transducer_beam_angle_major_offset']      = float(l.split()[4])
+            d['instrument_transducer_beam_angle_minor_offset']      = float(l.split()[9])
+            
+        if'#  Transceiver:' in l:
+            d['instrument_transceiver_model']          = l.split()[-1]
+            d['instrument_transceiver_serial']         = l.split()[5]        
+            l = f.readline()
+            d['data_processing_transmit_pulse_length'] = float(l.split()[3])
+            d['data_range_axis_interval_value']        = float(l.split()[7])
+            d['data_range_axis_interval_type']         = 'Range (metres)'
+            l = f.readline()
+            d['data_processing_transceiver_power']     = float(l.split()[2])
+            d['data_processing_bandwidth']             = float(l.split()[6])
+            
+        if '#  Sounder Type:' in l:
+            l = f.readline()
+            d['data_processing_software_version'] = l.split('#')[1].strip()
+            
+        if '#  TS Detection:' in l:
+            l = f.readline()
+            d['target_detection_minimum_value']           = float(l.split()[3])
+            d['target_detection_minimum_spacing']         = float(l.split()[7])
+            l = f.readline()
+            d['target_detection_beam_compensation']       = float(l.split()[4])
+            d['target_detection_minimum_ecolength']       = float(l.split()[8])
+            l = f.readline()
+            d['target_detection_maximum_phase_deviation'] = float(l.split()[4])
+            d['target_detection_maximum_echolength']      = float(l.split()[7])
+            
+        if '#  Environment:' in l:
+            l                       = f.readline()
+            d['calibration_absorption']  = float(l.split()[3])/1000
+            d['calibration_sound_speed'] = float(l.split()[7])
+            
+        if '#  Beam Model results:' in l:
+            l = f.readline()
+            d['data_processing_on_axis_gain']           = float(l.split()[4])
+            d['data_processing_on_axis_gain_units']     = 'dB'
+            d['data_processing_Sacorrection']           = float(l.split()[8])
+            l = f.readline()
+            d['data_procesing_beam_angle_major']        = float(l.split()[5])
+            d['data_procesing_beam_angle_minor']        = float(l.split()[11])
+            l = f.readline()
+            d['data_procesing_beam_angle_major_offset'] = float(l.split()[5])
+            d['data_procesing_beam_angle_minor_offset'] = float(l.split()[11])
+            
+    # return data dictionary    
+    return d 
+
+def lobes2params(file):
+    """
+    Read lobes text file contents, and allocate variables in a params object,
+    following pyEcholab structure.
+
+    Parameters
+    ----------
+    file: str
+          path/to/calibration/lobes/file.txt
+
+    Returns
+    -------
+    params: object
+            Contains calibration parameters, following pyEcholab structure.
+    """
+    
+    # read lobes file content
+    d = lobes(file)
+    
+    # allocate variables in params object and return
+    class params(object):
+        frequency               =d['instrument_transducer_frequency']*1e3      # Hz
+        transmit_power          =d['data_processing_transceiver_power']        # W
+        pulse_length            =d['data_processing_transmit_pulse_length']/1e3# s
+        gain                    =d['data_processing_on_axis_gain']             # dB
+        sa_correction           =d['data_processing_Sacorrection']             # dB   
+        angle_beam_athwartship  =d['data_procesing_beam_angle_major']          # deg
+        angle_beam_alongship    =d['data_procesing_beam_angle_minor']          # deg
+        angle_offset_athwartship=d['data_procesing_beam_angle_major_offset']   # deg  
+        angle_offset_alongship  =d['data_procesing_beam_angle_minor_offset']   # deg
+        absorption_coefficient  =None                                          # dB m-1
+        sound_velocity          =None                                          # m s-1
+    return params
 
 def echoview(calfile, channel):
     """
