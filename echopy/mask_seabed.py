@@ -7,7 +7,7 @@ Created on Fri Apr 27 14:45:59 2018
 """
 import numpy as np
 from echopy.transform import lin, log
-import cv2
+#import cv2 # TODO: consider other module, unable to conda install with python>3.7
 from skimage.morphology import remove_small_objects
 from skimage.morphology import erosion
 from skimage.morphology import dilation
