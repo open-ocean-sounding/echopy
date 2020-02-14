@@ -20,7 +20,7 @@ def above(Sv, r, r0):
             bool: 2D array mask (above range = True).
     """
        
-    idx = np.where(np.ma.masked_greater(r, r0).mask)[0]
+    idx = np.where(np.ma.masked_less(r, r0).mask)[0]
     mask = np.zeros((Sv.shape), dtype=bool)
     mask[idx,:] = True    
     return mask
@@ -38,7 +38,7 @@ def below(Sv, r, r0):
             bool: 2D array mask (below range = True).
     """
        
-    idx = np.where(np.ma.masked_less(r, r0).mask)[0]
+    idx = np.where(np.ma.masked_greater(r, r0).mask)[0]
     mask = np.zeros((Sv.shape), dtype=bool)
     mask[idx,:] = True    
     return mask
