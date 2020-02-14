@@ -351,11 +351,11 @@ def full(datars, idimrs, jdimrs, idim, jdim):
         warnings.warn("Array already at full resolution!", RuntimeWarning)
         data= datars.copy()
     
-    # get mask indicating where data couldn't get values from data resampled
+    # get mask indicating where data could be resampled back
     mask_ = np.zeros_like(data, dtype=bool)
     i1= np.where(iax<iaxrs[-1])[0][-1] + 1
     j1= np.where(jax<jaxrs[-1])[0][-1] + 1
-    mask_[i1:, j1:] = True
+    mask_[:i1, :j1] = True
     
     return data, mask_
 
