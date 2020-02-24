@@ -7,54 +7,63 @@ Created on Thu Jun 27 15:37:47 2019
 @author: Alejandro Ariza, British Antarctic Survey
 """
 
+# import modules
 import warnings
 import numpy as np
 from echopy import transform as tf
 from scipy.interpolate import interp1d
 
-def twod(data, idim, jdim, idimrs, jdimrs, log=False, operation='mean'):
+def twod(data, idim, jdim, irvals, jrvals, log=False, operation='mean'):
     """
     Resample down an array along the two dimensions, i and j.
     
     Args:
         data   (float): 2D array with data to be resampled.
-        idim   (float): original i vertical dimension.
-        jdim   (float): original j horizontal dimension.
-        idimrs (float): resampled i vertical dimension.
-        jdimrs (float): resampled j horizontal dimension.
+        idim   (float): i vertical dimension.
+        jdim   (float): j horizontal dimension.
+        irvals (float): i resampling intervals for i vertical dimension.
+        jrvals (float): j resampling intervals for j horizontal dimension.
         log    (bool ): if True, data is considered logarithmic and it will 
-                        be converted to linear during the calculations.
+                        be converted to linear during calculations.
         operation(str): type of resampling operation. Accepts "mean" or "sum".
                     
     Returns:
         float: 2D resampled data array
-        float: 2D array with percentage of samples used in every resampled bin.
+        float: 1D resampled i vertical dimension
+        float: 1D resampled j horizontal dimension
+        float: 2D array with percentage of valid samples included on each
+               resampled cell.
     """ 
     
-    # check coherence in arrays dimensions
-    if len(idimrs)<2:
-        raise Exception('length of resampled i vertical dimension must be greater than 2')
-    if len(jdimrs)<2:
-        raise Exception('length of resampled j horizontal dimension must be greater than 2')
+    # check for appropiate inputs
+    if len(irvals)<2:
+        raise Exception('length of i resampling intervals must be  >2')
+    if len(jrvals)<2:
+        raise Exception('length of j resampling intervals must be >2')
     if len(data)!=len(idim):
-        raise Exception('data rows and i dimension length must be the same')
+        raise Exception('data height and idim length must be the same')
     if len(data[0])!=len(jdim):
-        raise Exception('data columns and j dimension length must be the same') 
+        raise Exception('data width and jdim length must be the same')        
+    for irval, jrval in zip(irvals, jrvals):
+        if (irval<idim[0]) | (idim[-1]<irval):
+            raise Exception('i resampling intervals must be within idim range')
+        if (jrval<jdim[0]) | (jdim[-1]<jrval):
+            raise Exception('j resampling intervals must be within jdim range')
         
     # convert data to linear, if logarithmic
     if log is True:
         data = tf.lin(data)
     
-    # get i/j axes from i/j dimensions
+    # get i/j axes from i/j dimensions and i/j intervals
     iax   = np.arange(len(idim))
     jax   = np.arange(len(jdim))
-    iaxrs = dim2ax(idim, iax, idimrs)    
-    jaxrs = dim2ax(jdim, jax, jdimrs)
+    iaxrs = dim2ax(idim, iax, irvals)    
+    jaxrs = dim2ax(jdim, jax, jrvals)
     
     # declare new array to allocate resampled values, and new array to
     # alllocate the percentage of values used for resampling
-    datars     = np.zeros((len(iaxrs), len(jaxrs)))*np.nan
-    percentage = np.zeros((len(iaxrs), len(jaxrs)))*np.nan
+    datar     = np.zeros((len(iaxrs)-1, len(jaxrs)-1))*np.nan
+    percentage = np.zeros((len(iaxrs)-1, len(jaxrs)-1))*np.nan
     
     # iterate along-range
     for i in range(len(iaxrs)-1):
@@ -95,7 +104,7 @@ def twod(data, idim, jdim, idimrs, jdimrs, log=False, operation='mean'):
             # if d is an all-NAN array, return NAN as the weighted operation
             # and zero as the percentage of valid numbers used for binning
             if np.isnan(d).all():
-                datars    [i, j] = np.nan
+                datar    [i, j] = np.nan
                 percentage[i, j] = 0
             
             #compute weighted operation & percentage of valid numbers otherwise
@@ -103,53 +112,56 @@ def twod(data, idim, jdim, idimrs, jdimrs, log=False, operation='mean'):
                 w_ = w.copy()
                 w_[np.isnan(d)] = np.nan
                 if operation=='mean':
-                    datars    [i, j]  = np.nansum(d*w_)/np.nansum(w_)
+                    datar   [i, j]  = np.nansum(d*w_)/np.nansum(w_)
                 elif operation=='sum':
-                    datars    [i, j]  = np.nansum(d*w_)
+                    datar   [i, j]  = np.nansum(d*w_)
                 else:
                     raise Exception('Operation not recognised')                        
                 percentage[i, j]  = np.nansum(  w_)/np.nansum(w )*100                        
     
     # convert back to logarithmic, if data was logarithmic
     if log is True:
-        datars = tf.log(datars)
+        datar = tf.log(datar)
     
-    # get mask_ indicating valid values of datars and percentage
-    mask_           = np.zeros_like(datars, dtype=bool)
-    mask_[:-1, :-1] = True
+    # get resampled dimensions from resampling intervals
+    idimr = irvals[:-1]
+    jdimr = jrvals[:-1]
     
-    return datars, percentage, mask_
+    # return data
+    return datar, idimr, jdimr, percentage
 
-def oned(data, dim, dimrs, log=False, operation='mean'):
+def oned(data, dim, rvals, axis, log=False, operation='mean'):
     """
-    Resample down an array along i or j dimension. "Dim" length must be equal
-    to either i or j data length, so the algorithm can work out the resampling
-    dimension to proceed.
+    Resample down an array along i or j dimension.
     
     Args:
         data  (float) : 2D array with data to be resampled.
         dim   (float) : original dimension.
-        dimrs (float) : resampled dimension.
+        rvals (float) : resampling dimension intervals.
+        axis  (int  ) : resampling axis (0= i vertical ax, 1= j horizontal ax).
         log   (bool ) : if True, data is considered logarithmic and it will 
                         be converted to linear during the calculations.
         operation(str): type of resampling operation. Accepts "mean" or "sum".
                     
     Returns:
         float: 2D resampled data array
-        float: 2D array with percentage of samples used in every resampled bin.
+        float: 1D resampled array corresponding to either i or j dimension.
+        float: 2D array with percentage of valid samples included on each
+               resampled cell.
     """
     
+    # check if appropiate axis input
+    if axis>1:
+        raise Exception('axis must be 0 or 1')
+        
     # check if appropiate resampled dimension
-    if len(dimrs)<2:
-        raise Exception('length of resampled dimension must be greater than 2')
-
-    # find out resampling dimension
-    if len(data)==len(dim):
-        resampling_dimension=0        
-    elif len(data[0])==len(dim):
-        resampling_dimension=1
-    else:
-        raise Exception('dimension length doesn\'t fit neither i or j data length')
+    if len(rvals)<2:
+        raise Exception('length of resampling intervals must be >2')
+    
+    # check if intervals are within the dimension range of values 
+    for rval in rvals:
+        if (rval<dim[0]) | (dim[-1]<rval):
+            raise Exception('resampling intervals must be within dim range')
         
     # convert data to linear, if logarithmic
     if log is True:
@@ -157,17 +169,21 @@ def oned(data, dim, dimrs, log=False, operation='mean'):
         
     # get axis from dimension
     ax   = np.arange(len(dim))   
-    axrs = dim2ax(dim, ax, dimrs)
+    axrs = dim2ax(dim, ax, rvals)
     
     # proceed along i dimension
-    if resampling_dimension==0:
+    if axis==0:
         iax   = ax
         iaxrs = axrs
         
+        # check data and axis match
+        if len(data)!=len(iax):
+            raise Exception('data height and i dimension length must be equal')
+        
         # declare new array to allocate resampled values, and new array to
         # alllocate the percentage of values used for resampling
-        datars     = np.zeros((len(iaxrs), len(data[0])))*np.nan
-        percentage = np.zeros((len(iaxrs), len(data[0])))*np.nan
+        datar     = np.zeros((len(iaxrs)-1, len(data[0])))*np.nan
+        percentage = np.zeros((len(iaxrs)-1, len(data[0])))*np.nan
         
         # iterate along i dimension
         for i in range(len(iaxrs)-1):
@@ -192,7 +208,7 @@ def oned(data, dim, dimrs, log=False, operation='mean'):
             # if d is an all-NAN array, return NAN as the weighted operation
             # and zero as the percentage of valid numbers used for binning
             if np.isnan(d).all():
-                datars    [i, :] = np.nan
+                datar     [i, :] = np.nan
                 percentage[i, :] = 0
             
             # compute weighted operation and percentage valid numbers otherwise
@@ -200,32 +216,36 @@ def oned(data, dim, dimrs, log=False, operation='mean'):
                 w_             =w.copy()
                 w_[np.isnan(d)]=np.nan
                 if operation=='mean':
-                    datars    [i,:]=np.nansum(d*w_,axis=0)/np.nansum(w_,axis=0)
+                    datar    [i,:]=np.nansum(d*w_,axis=0)/np.nansum(w_,axis=0)
                 elif operation=='sum':
-                    datars    [i,:]= np.nansum(d*w_,axis=0)
+                    datar    [i,:]= np.nansum(d*w_,axis=0)
                 else:
                     raise Exception('Operation not recognised')
                 percentage[i,:]=np.nansum(w_  ,axis=0)/np.nansum(w ,axis=0)*100                        
         
         # convert back to logarithmic, if data was logarithmic
         if log is True:
-            datars = tf.log(datars)
+            datar = tf.log(datar)
         
-        # get mask_ indicating valid values of datars and percentage
-        mask_         = np.zeros_like(datars, dtype=bool)
-        mask_[:-1, :] = True
+        # get resampled dimension from resampling interval
+        dimr = rvals
         
-        return datars, percentage, mask_
+        # return data
+        return datar, dimr, percentage
     
     # proceed along j dimension
-    if resampling_dimension==1:
+    if axis==1:
         jax   = ax
         jaxrs = axrs
         
+        # check data and axis match
+        if len(data[0])!=len(jax):
+            raise Exception('data width and j dimension lenght must be equal')
+        
         # declare new array to allocate resampled values, and new array to
         # alllocate the percentage of values used for resampling
-        datars     = np.zeros((len(data), len(jaxrs)))*np.nan
-        percentage = np.zeros((len(data), len(jaxrs)))*np.nan
+        datar      = np.zeros((len(data), len(jaxrs)-1))*np.nan
+        percentage = np.zeros((len(data), len(jaxrs)-1))*np.nan
         
         # iterate along j dimension
         for j in range(len(jaxrs)-1):
@@ -250,7 +270,7 @@ def oned(data, dim, dimrs, log=False, operation='mean'):
             # if d is an all-NAN array, return NAN as the weighted operation
             # and zero as the percentage of valid numbers used for resampling
             if np.isnan(d).all():
-                datars    [:, j] = np.nan
+                datar     [:, j] = np.nan
                 percentage[:, j] = 0
             
             # compute weighted operation and percentage valid numbers otherwise
@@ -258,33 +278,32 @@ def oned(data, dim, dimrs, log=False, operation='mean'):
                 w_             =w.copy()
                 w_[np.isnan(d)]=np.nan
                 if operation=='mean':
-                    datars    [:,j]=np.nansum(d*w_,axis=1)/np.nansum(w_,axis=1)
+                    datar     [:,j]=np.nansum(d*w_,axis=1)/np.nansum(w_,axis=1)
                 elif operation=='sum':
-                    datars    [:,j]=np.nansum(d*w_,axis=1)
+                    datar     [:,j]=np.nansum(d*w_,axis=1)
                 else:
                     raise Exception('Operation not recognised')
-                        
                 percentage[:,j]=np.nansum(w_  ,axis=1)/np.nansum(w ,axis=1)*100                        
         
         # convert back to logarithmic, if data was logarithmic
         if log is True:
-            datars = tf.log(datars)
+            datar = tf.log(datar)
         
-        # get mask_ indicating valid values of datars and percentage
-        mask_         = np.zeros_like(datars, dtype=bool)
-        mask_[:, :-1] = True
+        # get resampled dimension from resampling intervals
+        dimr = rvals
         
-        return datars, percentage, mask_
+        # return data
+        return datar, dimr, percentage
 
-def full(datars, idimrs, jdimrs, idim, jdim):
+def full(datar, irvals, jrvals, idim, jdim):
     """
     Turn resampled data back to full resolution, according to original i and j
     full resolution dimensions.
     
     Args:
-        datars (float): 2D array with resampled data.
-        idimrs (float): 1D array with resampled i axis.
-        jdimrs (float): 1D array with resampled j axis.
+        datar  (float): 2D array with resampled data.
+        irvals (float): 1D array with i resampling intervals.
+        jdimr  (float): 1D array with i resampling intervals.
         idim   (float): 1D array with full resolution i axis.
         jdim   (float): 1D array with full resolution j axis.
         
@@ -294,23 +313,24 @@ def full(datars, idimrs, jdimrs, idim, jdim):
                at full resolution.
     """
     
-    # check coherence in arrays dimensions
-    if len(idimrs)<2:
-        raise Exception('i dimension length must be greater than 2')
-    if len(jdimrs)<2:
-        raise Exception('j dimension length must be greater than 2')
-    if len(datars)!=len(idimrs):
-        raise Exception('data rows and i dimension length must be the same')
-    if len(datars[0])!=len(jdimrs):
-        raise Exception('data columns and j dimension length must be the same') 
+    
+    # check for appropiate inputs
+    if len(irvals)<2:
+        raise Exception('i resampling interval length must be >2')
+    if len(jrvals)<2:
+        raise Exception('j resampling interval length must be >2')
+    if len(datar)+1<len(irvals):
+        raise Exception('i resampling intervals length can\'t exceed data height + 1')
+    if len(datar[0])+1<len(jrvals):
+        raise Exception('j resampling intervals length can\'t exceed data width + 1') 
         
-    # get i/j axes from i/j dimensions
+    # get i/j axes from i/j dimensions and i/j intervals
     iax   = np.arange(len(idim))
     jax   = np.arange(len(jdim))
-    iaxrs = dim2ax(idim, iax, idimrs)    
-    jaxrs = dim2ax(jdim, jax, jdimrs)
+    iaxrs = dim2ax(idim, iax, irvals)    
+    jaxrs = dim2ax(jdim, jax, jrvals)
     
-    # check whether i/j resampled axes and i/j full axes are different
+    # check whether i/j resampled axes and i/j intervals are different
     idiff = True
     if len(iaxrs)==len(iax):
         if (iaxrs==iax).all():
@@ -330,32 +350,35 @@ def full(datars, idimrs, jdimrs, idim, jdim):
             for j in range(len(jaxrs)-1):        
                 jdx = np.where((jaxrs[j]<=jax) & (jax<jaxrs[j+1]))[0]
                 if idx.size*jdx.size > 0:
-                    data[idx[0]:idx[-1]+1, jdx[0]:jdx[-1]+1]= datars[i,j]
+                    data[idx[0]:idx[-1]+1, jdx[0]:jdx[-1]+1]= datar[i,j]
     
     # if only i axis is different, resample back to full along i dimension
-    elif idiff & np.invert(jdiff):
+    elif idiff & (not jdiff):
         for i in range(len(iaxrs)-1):            
             idx = np.where((iaxrs[i]<=iax) & (iax<iaxrs[i+1]))[0]
             if idx.size>0:
-                data[idx[0]:idx[-1]+1, :]= datars[i, :]
+                data[idx[0]:idx[-1]+1, :]= datar[i, :]
         
     # if only j axis is different, resample back to full along j dimension
-    elif np.invert(idiff) & jdiff:        
+    elif (not idiff) & jdiff:        
         for j in range(len(jaxrs)-1):        
             jdx = np.where((jaxrs[j]<=jax) & (jax<jaxrs[j+1]))[0]
             if jdx.size > 0:
-                data[:, jdx[0]:jdx[-1]+1]= datars[:, j].reshape(-1,1)
+                data[:, jdx[0]:jdx[-1]+1]= datar[:, j].reshape(-1,1)
         
     # if i/j resampled & i/j full are the same, data resampled & data are equal
     else:
         warnings.warn("Array already at full resolution!", RuntimeWarning)
-        data= datars.copy()
+        data= datar.copy()
     
-    # get mask indicating where data could be resampled back
+    # get mask indicating where data couldn't be resampled back
     mask_ = np.zeros_like(data, dtype=bool)
     i1= np.where(iax<iaxrs[-1])[0][-1] + 1
     j1= np.where(jax<jaxrs[-1])[0][-1] + 1
-    mask_[:i1, :j1] = True
+    if idiff:
+        mask_[i1:,   :] = True
+    if jdiff:
+        mask_[  :, j1:] = True
     
     return data, mask_
 

@@ -68,8 +68,8 @@ def derobertis(Sv, iax, jax, m, n, r, alpha, bgnmax=-125):
     
     # return background noise as NAN values otherwise    
     else:
-        bgn   = np.zeros_like(Sv)*np.nan
-        mask_ = np.zeros_like(Sv, dtype=bool)
+        bgn   = np.ones_like(Sv)*np.nan
+        mask_ = np.ones_like(Sv, dtype=bool)
         warnings.warn("unable to estimate background noise, incorrect resampling axes", RuntimeWarning)
     
     return bgn, mask_

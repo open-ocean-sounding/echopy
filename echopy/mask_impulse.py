@@ -36,7 +36,7 @@ def ryan(Sv, iax, m, n=1, thr=10):
         
     # resample down vertically    
     iax_ = np.arange(iax[0], iax[-1], m)
-    Sv_  = rs.oned(Sv, iax, iax_, log=True)[0]
+    Sv_  = rs.oned(Sv, iax, iax_, 0, log=True)[0]
     
     # resample back to full resolution
     jax = np.arange(len(Sv[0]))
@@ -82,7 +82,7 @@ def ryan_iterable(Sv, iax, m, n=(1,2), thr=10):
         
     # resample down vertically    
     iax_ = np.arange(iax[0], iax[-1], m)
-    Sv_  = rs.oned(Sv, iax, iax_, log=True)[0]
+    Sv_  = rs.oned(Sv, iax, iax_, 0, log=True)[0]
     
     # resample back to full resolution
     jax = np.arange(len(Sv[0]))
@@ -99,8 +99,8 @@ def ryan_iterable(Sv, iax, m, n=(1,2), thr=10):
         mask     = mask | (maskf&maskb)
     
     # get second mask indicating valid samples in IN mask    
-    mask_[:, 0:max(n)] = False
-    mask_[:, -max(n):] = False    
+    mask_[:, 0:max(n)] = True
+    mask_[:, -max(n):] = True  
     
     return mask, mask_
 
@@ -167,11 +167,11 @@ def wang(Sv, thr=(-70,-40), erode=[(3,3)], dilate=[(5,5),(7,7)],
     mask_vacant                         = Sv_corrected1==-999
     Sv_corrected2[mask_vacant&mask_bio] = Sv_median[mask_vacant&mask_bio]
     
-    # get mask indicating the valid samples for Sv_corrected2
-    mask_ = np.zeros_like(Sv_corrected2, dtype=bool)
+    # get mask indicating edges, where swarms analysis couldn't be performed 
+    mask_ = np.ones_like(Sv_corrected2, dtype=bool)
     idx   = int((max([e[0], d[0]])-1)/2)
     jdx   = int((max([e[1], d[1]])-1)/2)
-    mask_[idx:-idx, jdx:-jdx] = True
+    mask_[idx:-idx, jdx:-jdx] = False
     
     return Sv_corrected2, mask_
 

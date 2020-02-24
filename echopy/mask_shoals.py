@@ -220,17 +220,16 @@ def echoview(Sv, idim, jdim,
         if (linkedshoalheight<minsho[0]) | (linkedshoalwidth<minsho[1]):
             mask[idx, jdx] = False
     
-    # get mask_ indicating the reliable samples in mask,the asumption here is
-    # that the size of bordering shoals (touching array edges) can not be
-    # properly evaluated. Therefore, we remove array edges.    
-    mask_               = np.zeros(mask.shape, dtype=bool)    
+    # get mask indicating mask edges where shoals coudn't be evaluated due to
+    # shoals chopped at data borders.
+    mask_               = np.ones(mask.shape, dtype=bool)    
     edgeheight          = np.max([mincan[0], maxlink[0], minsho[0]])
     edgewidth           = np.max([mincan[1], maxlink[1], minsho[1]])    
     i0                  = np.where((idim-idim[ 0]) - edgeheight >= 0)[0][ 0]
     i1                  = np.where((idim-idim[-1]) + edgeheight <  0)[0][-1]+1    
     j0                  = np.where((jdim-jdim[ 0]) - edgewidth  >= 0)[0][ 0]
     j1                  = np.where((jdim-jdim[-1]) + edgewidth  <  0)[0][-1]+1
-    mask_[i0:i1, j0:j1] = True
+    mask_[i0:i1, j0:j1] = False
         
     return mask, mask_
         
