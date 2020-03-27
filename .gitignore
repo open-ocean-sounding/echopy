@@ -1,7 +1,7 @@
 # ignore git sync of files in this folder:
 __pycache__/
 .DS_Store
-bin/
+private/
 data/*
 examples/untitled*
 rapidkrill/tmp/*
