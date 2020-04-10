@@ -414,7 +414,7 @@ def dim2ax(dim, ax, dimrs):
     # check that resampled dimension doesn't exceed the limits
     # of the original one
     if (dimrs[0]<dim[0]) | (dimrs[-1]>dim[-1]):
-        raise Exception('resampled dimension can not exceed ' +
+        raise Exception('resampling dimension can not exceed ' +
                         'the original dimension limits') 
         
     # convert variables to float64 if they are in datetime64 format
