@@ -11,6 +11,7 @@ from echopy.transform import lin, log
 from skimage.morphology import remove_small_objects
 from skimage.morphology import erosion
 from skimage.morphology import dilation
+from skimage.measure import label
 from scipy.signal import convolve2d
 import scipy.ndimage as nd
 
@@ -119,7 +120,9 @@ def deltaSv(Sv, r, r0=10, r1=1000, roff=0, thr=20):
     return mask
 
 def blackwell(Sv, theta, phi, r,
-              r0=10, r1=1000, ttheta=702, tphi=282, wtheta=28 , wphi=52):
+              r0=10, r1=1000, 
+              tSv=-75, ttheta=702, tphi=282, 
+              wtheta=28 , wphi=52):
     """
     Detects and mask seabed using the split-beam angle and Sv, based in 
     "Blackwell et al (2019), Aliased seabed detection in fisheries acoustic
@@ -132,6 +135,7 @@ def blackwell(Sv, theta, phi, r,
         r (float): 1D range array (m)
         r0 (int): minimum range below which the search will be performed (m) 
         r1 (int): maximum range above which the search will be performed (m)
+        tSv (float): Sv threshold above which seabed is pre-selected (dB)
         ttheta (int): Theta threshold above which seabed is pre-selected (dB)
         tphi (int): Phi threshold above which seabed is pre-selected (dB)
         wtheta (int): window's size for mean square operation in Theta field
@@ -142,44 +146,224 @@ def blackwell(Sv, theta, phi, r,
     """
     
     # delimit the analysis within user-defined range limits 
-    r0 = np.nanargmin(abs(r - r0))
-    r1 = np.nanargmin(abs(r - r1)) + 1
-    Svchunk = Sv[r0:r1, :]
+    r0         = np.nanargmin(abs(r - r0))
+    r1         = np.nanargmin(abs(r - r1)) + 1
+    Svchunk    = Sv[r0:r1, :]
     thetachunk = theta[r0:r1, :]
-    phichunk = phi[r0:r1, :]
+    phichunk   = phi[r0:r1, :]
     
     # get blur kernels with theta & phi width dimensions 
     ktheta = np.ones((wtheta, wtheta))/wtheta**2
-    kphi   = np.ones((wphi, wphi))/wphi**2
+    kphi   = np.ones((wphi  , wphi  ))/wphi  **2
     
     # perform mean square convolution and mask if above theta & phi thresholds
     thetamaskchunk = convolve2d(thetachunk, ktheta, 'same',
-                                boundary = 'symm')**2 > ttheta
-    phimaskchunk   = convolve2d(phichunk  ,  kphi , 'same',
-                                boundary = 'symm')**2 > tphi
+                                boundary='symm')**2 > ttheta
+    phimaskchunk   = convolve2d(phichunk,  kphi, 'same',
+                                boundary='symm')**2 > tphi
     anglemaskchunk = thetamaskchunk | phimaskchunk
         
     # if aliased seabed, mask Sv above the Sv median of angle-masked regions
-    Svmaskchunk = Svchunk > log(np.nanmedian(lin(Svchunk[anglemaskchunk])))
+    if anglemaskchunk.any():
+        Svmedian_anglemasked = log(np.nanmedian(lin(Svchunk[anglemaskchunk])))
+        if np.isnan(Svmedian_anglemasked):
+            Svmedian_anglemasked = np.inf
+        if Svmedian_anglemasked < tSv:
+            Svmedian_anglemasked = tSv                            
+        Svmaskchunk = Svchunk > Svmedian_anglemasked
     
-    # label connected features in Svmaskchunk  
-    f = nd.label(Svmaskchunk, nd.generate_binary_structure(2,2))[0]
-    
-    # get features intercepted by the anglemaskchunk (likely, the seabed)
-    fintercepted = list(set(f[anglemaskchunk]))  
-    if 0 in fintercepted: fintercepted.remove(fintercepted == 0)
+        # label connected items in Sv mask
+        items = nd.label(Svmaskchunk, nd.generate_binary_structure(2,2))[0]
         
-    # combine angle-intercepted features in a single mask 
-    maskchunk = np.zeros(Svchunk.shape, dtype = 'bool')
-    for i in fintercepted:
-        maskchunk = maskchunk | (f==i)
+        # get items intercepted by angle mask (likely, the seabed)
+        intercepted = list(set(items[anglemaskchunk]))  
+        if 0 in intercepted: 
+            intercepted.remove(intercepted==0)
+            
+        # combine angle-intercepted items in a single mask 
+        maskchunk = np.zeros(Svchunk.shape, dtype=bool)
+        for i in intercepted:
+            maskchunk = maskchunk | (items==i)
+    
+        # add data above r0 and below r1 (removed in first step)
+        above = np.zeros((r0, maskchunk.shape[1]), dtype=bool)
+        below = np.zeros((len(r) - r1, maskchunk.shape[1]), dtype=bool)
+        mask  = np.r_[above, maskchunk, below]
+        anglemask = np.r_[above, anglemaskchunk, below] # TODO remove
+    
+    # return empty mask if aliased-seabed was not detected in Theta & Phi    
+    else:
+        mask = np.zeros_like(Sv, dtype=bool)
 
-    # add data above r0 and below r1 (removed in first step)
-    above = np.zeros((r0, maskchunk.shape[1]), dtype = 'bool')
-    below = np.zeros((len(r) - r1, maskchunk.shape[1]), dtype = 'bool')
-    mask  = np.r_[above, maskchunk, below]     
+    return mask, anglemask
+
+def blackwell_mod(Sv, theta, phi, r, r0=10, r1=1000, tSv=-75, ttheta=702, 
+                  tphi=282, wtheta=28 , wphi=52, 
+                  rlog=None, tpi=None, freq=None, rank=50):
+    """
+    Detects and mask seabed using the split-beam angle and Sv, based in 
+    "Blackwell et al (2019), Aliased seabed detection in fisheries acoustic
+    data". Complete article here: https://arxiv.org/abs/1904.10736
+    
+    This is a modified version from the original algorithm. It includes extra
+    arguments to evaluate whether aliased seabed items can occur, given the 
+    true seabed detection range, and the possibility of tuning the percentile's
+    rank.
+    
+    Args:
+        Sv (float): 2D numpy array with Sv data (dB)
+        theta (float): 2D numpy array with the along-ship angle (degrees)
+        phi (float): 2D numpy array with the athwart-ship angle (degrees)
+        r (float): 1D range array (m)
+        r0 (int): minimum range below which the search will be performed (m) 
+        r1 (int): maximum range above which the search will be performed (m)
+        tSv (float): Sv threshold above which seabed is pre-selected (dB)
+        ttheta (int): Theta threshold above which seabed is pre-selected (dB)
+        tphi (int): Phi threshold above which seabed is pre-selected (dB)
+        wtheta (int): window's size for mean square operation in Theta field
+        wphi (int): window's size for mean square operation in Phi field
+        rlog (float): Maximum logging range of the echosounder (m)
+        tpi (float): Transmit pulse interval, or ping rate (s)
+        freq (int): frequecy (kHz)
+        rank (int): Rank for percentile operation: [0, 100]
+                
+    Returns:
+        bool: 2D array with seabed mask
+    """
+    
+    # raise errors if wrong arguments
+    if r0>r1:
+        raise Exception('Minimum range has to be shorter than maximum range')
+    
+    # return empty mask if searching range is outside the echosounder range
+    if (r0>r[-1]) or (r1<r[0]):
+        return np.zeros_like(Sv, dtype=bool)
+    
+    # delimit the analysis within user-defined range limits 
+    i0         = np.nanargmin(abs(r - r0))
+    i1         = np.nanargmin(abs(r - r1)) + 1
+    Svchunk    = Sv   [i0:i1, :]
+    thetachunk = theta[i0:i1, :]
+    phichunk   = phi  [i0:i1, :]
+    
+    # get blur kernels with theta & phi width dimensions 
+    ktheta = np.ones((wtheta, wtheta))/wtheta**2
+    kphi   = np.ones((wphi  , wphi  ))/wphi  **2
+    
+    # perform mean square convolution and mask if above theta & phi thresholds
+    thetamaskchunk = convolve2d(thetachunk, ktheta, 'same',
+                                boundary='symm')**2 > ttheta
+    phimaskchunk   = convolve2d(phichunk,  kphi, 'same',
+                                boundary='symm')**2 > tphi
+    anglemaskchunk = thetamaskchunk | phimaskchunk
+    
+    # remove aliased seabed items when estimated True seabed can not be 
+    # detected below the logging range
+    if (rlog is not None) and (tpi is not None) and (freq is not None):
+        items       = label(anglemaskchunk)
+        item_labels = np.unique(label(anglemaskchunk))[1:]
+        for il in item_labels:   
+            item    = items==il
+            ritem   = np.nanmean(r[i0:i1][np.where(item)[0]])
+            rseabed = aliased2seabed(ritem , rlog, tpi, freq)
+            if rseabed==[]:
+                anglemaskchunk[item] = False
+
+    anglemaskchunk = anglemaskchunk & (Svchunk>tSv)
+        
+    # if aliased seabed, mask Sv above the Sv median of angle-masked regions
+    if anglemaskchunk.any():
+        Svmedian_anglemasked = log(
+            np.nanpercentile(lin(Svchunk[anglemaskchunk]), rank))
+        if np.isnan(Svmedian_anglemasked):
+            Svmedian_anglemasked = np.inf
+        if Svmedian_anglemasked < tSv:
+            Svmedian_anglemasked = tSv                            
+        Svmaskchunk = Svchunk > Svmedian_anglemasked
+    
+        # label connected items in Sv mask
+        items = nd.label(Svmaskchunk, nd.generate_binary_structure(2,2))[0]
+        
+        # get items intercepted by angle mask (likely, the seabed)
+        intercepted = list(set(items[anglemaskchunk]))  
+        if 0 in intercepted: 
+            intercepted.remove(intercepted==0)
+            
+        # combine angle-intercepted items in a single mask 
+        maskchunk = np.zeros(Svchunk.shape, dtype=bool)
+        for i in intercepted:
+            maskchunk = maskchunk | (items==i)
+    
+        # add data above r0 and below r1 (removed in first step)
+        above = np.zeros((i0, maskchunk.shape[1]), dtype=bool)
+        below = np.zeros((len(r) - i1, maskchunk.shape[1]), dtype=bool)
+        mask  = np.r_[above, maskchunk, below]
+    
+    # return empty mask if aliased-seabed was not detected in Theta & Phi    
+    else:
+        mask = np.zeros_like(Sv, dtype=bool)
 
     return mask
+
+def aliased2seabed(aliased, rlog, tpi, f, c=1500, 
+                   rmax={18:7000, 38:2800, 70:1100, 120:850, 200:550}):
+    """ 
+    Estimate true seabed, given the aliased seabed range. It might provide
+    a list of ranges, corresponding to seabed reflections from several pings
+    before, or provide an empty list if true seabed occurs within the logging 
+    range or beyond the maximum detection range.
+    
+    Args:
+      aliased (float): Range of aliased seabed (m).
+      rlog (float): Maximum logging range (m).
+      tpi (float): Transmit pulse interval (s).
+      f (int): Frequency (kHz).
+      c (int): Sound speed in seawater (m s-1). Defaults to 1500.
+      rmax (dict): Maximum seabed detection range per frequency. Defaults 
+                   to {18:7000, 38:2800, 70:1100, 120:850, 200:550}.
+  
+    Returns:
+        float: list with estimated seabed ranges, reflected from preceeding 
+        pings (ping -1, ping -2, ping -3, etc.).
+        
+    """   
+    ping    = 0
+    seabed  = 0
+    seabeds = []
+    while seabed<=rmax[f]:
+        ping   = ping + 1
+        seabed = (c*tpi*ping)/2 + aliased
+        if (seabed>rlog) & (seabed<rmax[f]):
+            seabeds.append(seabed)
+            
+    return seabeds 
+
+def seabed2aliased(seabed, rlog, tpi, f, c=1500, 
+                   rmax={18:7000, 38:2800, 70:1100, 120:850, 200:550}):
+    """
+    Estimate aliased seabed range, given the true seabed range. The answer will
+    be 'None' if true seabed occurs within the logging range or if it's beyond 
+    the detection limit of the echosounder.
+
+    Args:
+        seabed (float): True seabed range (m).
+        rlog (float): Maximum logging range (m).
+        tpi (float): Transmit pulse interval (s).
+        f (int): frequency (kHz).
+        c (float): Sound speed in seawater (m s-1). Defaults to 1500.
+        rmax (dict): Maximum seabed detection range per frequency. Defaults 
+                     to {18:7000, 38:2800, 70:1100, 120:850, 200:550}.
+
+    Returns:
+        float: Estimated range of aliased seabed (m
+
+    """
+    if (not seabed<rlog) and (not seabed>rmax[f]):
+        aliased = ((2*seabed) % (c*tpi)) / 2
+    else:
+        aliased = None
+        
+    return aliased
 
 def experimental(Sv, r,
                  r0=10, r1=1000, roff=0, thr=(-30,-70), ns=150, nd=3):
@@ -247,7 +431,7 @@ def experimental(Sv, r,
 
     return mask
 
-def ariza(Sv, r, r0=20, r1=1000, roff=0,
+def ariza(Sv, r, r0=10, r1=1000, roff=0,
           thr=-40, ec=1, ek=(1,3), dc=10, dk=(3,7)):
    
     """
@@ -275,6 +459,14 @@ def ariza(Sv, r, r0=20, r1=1000, roff=0,
     Returns:
         bool: 2D array with seabed mask.
     """
+    
+     # raise errors if wrong arguments
+    if r0>r1:
+        raise Exception('Minimum range has to be shorter than maximum range')
+    
+    # return empty mask if searching range is outside the echosounder range
+    if (r0>r[-1]) or (r1<r[0]):
+        return np.zeros_like(Sv, dtype=bool)
     
     # get indexes for range offset and range limits
     r0   = np.nanargmin(abs(r - r0))
