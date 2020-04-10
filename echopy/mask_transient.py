@@ -99,7 +99,17 @@ def fielding(Sv, r, r0, r1, n, thr, roff, jumps=5, maxts=-35, start=0):
     Returns:
         list: 2D boolean array with TN mask and 2D boolean array with mask
               indicating where TN detection was unfeasible.
-    """               
+    """ 
+
+     # raise errors if wrong arguments
+    if r0>r1:
+        raise Exception('Minimum range has to be shorter than maximum range')
+    
+    # return empty mask if searching range is outside the echosounder range
+    if (r0>r[-1]) or (r1<r[0]):
+        mask  = np.zeros_like(Sv, dtype=bool) 
+        mask_ = np.zeros_like(Sv, dtype=bool) 
+        return mask, mask_              
         
     # get upper and lower range indexes   
     up = np.argmin(abs(r - r0))

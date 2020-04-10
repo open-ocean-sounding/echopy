@@ -48,6 +48,16 @@ def ryan(Sv, r, r0, r1, n, thr, start=0):
               indicating where AS detection was unfeasible.
     """
     
+     # raise errors if wrong arguments
+    if r0>r1:
+        raise Exception('Minimum range has to be shorter than maximum range')
+    
+    # return empty mask if searching range is outside the echosounder range
+    if (r0>r[-1]) or (r1<r[0]):
+        mask  = np.zeros_like(Sv, dtype=bool) 
+        mask_ = np.zeros_like(Sv, dtype=bool) 
+        return mask, mask_ 
+    
     # turn layer boundaries into arrays with length = Sv.shape[1]
     r0 = np.ones(Sv.shape[1])*r0
     r1 = np.ones(Sv.shape[1])*r1
