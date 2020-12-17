@@ -12,7 +12,7 @@ import numpy as np
 import scipy.ndimage as nd
 import pandas as pd
 
-def weill(Sv, thr=-70, maxvgap=5, minvlen=0, minhlen=0):
+def weill(Sv, thr=-70, maxvgap=5, maxhgap=5, minvlen=0, minhlen=0):
     """
     Detects and masks shoals following the algorithm decribed in:
         
@@ -59,7 +59,6 @@ def weill(Sv, thr=-70, maxvgap=5, minvlen=0, minhlen=0):
     
     # for each ping in the mask... 
     for jdx, ping in enumerate(list(np.transpose(mask))):    
-        
         # find gaps between masked features, and give them a label number
         pinglabelled = nd.label(np.invert(ping))[0]    
         
@@ -77,6 +76,28 @@ def weill(Sv, thr=-70, maxvgap=5, minvlen=0, minhlen=0):
                     # get gap indexes and fill in with True values (masked)
                     idx= np.where(gap)[0]
                     if (not 0 in idx) & (not len(mask)-1 in idx): #(exclude edges)
+                        mask[idx, jdx] = True
+                        
+    
+    # for each depth in the mask... 
+    for idx, depth in enumerate(list(mask)):    
+        # find gaps between masked features, and give them a label number
+        depthlabelled = nd.label(np.invert(depth))[0]    
+        
+        # proceed only if the ping presents gaps
+        if (not (depthlabelled==0).all()) & (not (depthlabelled==1).all()):
+            
+            # get list of gap labels and iterate through gaps       
+            labels = np.arange(1, np.max(depthlabelled)+1)
+            for label in labels:
+                
+                # if horizontal gaps are equal/shorter than maxhgap...
+                gap= depthlabelled==label
+                if np.sum(gap)<=maxhgap:
+                    
+                    # get gap indexes and fill in with True values (masked)
+                    jdx= np.where(gap)[0]
+                    if (not 0 in jdx) & (not len(mask)-1 in jdx): #(exclude edges)
                         mask[idx, jdx] = True
     
     # label connected features in the mask
@@ -98,7 +119,7 @@ def weill(Sv, thr=-70, maxvgap=5, minvlen=0, minhlen=0):
             
         # remove feature from mask if its maximum horizontal lenght < minhlen
         if featurehlen<minhlen:
-            mask[idx, jdx] = False                    
+            mask[idx, jdx] = False
     
     # get mask_ indicating the valid samples for mask   
     mask_                      = np.zeros_like(mask, dtype=bool)
