@@ -37,7 +37,7 @@ Echopy has essentially grown from code that was initially implemented to support
 * **Xinliang WANG** - *Yellow Sea Fisheries Research institute*
 
 ## Acknowledgments
-Echopy does not currently have any direct funding, but benefits from the hard work, time  and support of researchers and their institutions. We acknowledge [all contributors and institutions involved](README.md#contributors) with special mention of the British Antarctic Survey project [RapidKrill](https://github.com/bas-acoustics/rapidkrill), and [The Antarctic Wildlife Research Fund (AWR)](http://www.antarcticfund.org/) for releasing the first version and giving life to Echopy.  
+Echopy does not currently have any direct funding, but benefits from the hard work, time  and support of researchers and their institutions. We acknowledge [all contributors and institutions involved](https://github.com/open-ocean-sounding/echopy/blob/master/README.md#contributors) with special mention of the British Antarctic Survey project [RapidKrill](https://github.com/bas-acoustics/rapidkrill), and [The Antarctic Wildlife Research Fund (AWR)](http://www.antarcticfund.org/) for releasing the first version and giving life to Echopy.  
 
 ## License
 This software is licensed under the [MIT License](https://github.com/open-ocean-sounding/echopy/blob/master/LICENSE).
