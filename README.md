@@ -19,7 +19,7 @@ pip install echopy
 
 or install the latest version available in the develop branch by cloning the repository: 
 ```
-git clone https://github.com/[new-github-user]/echopy.git
+git clone https://github.com/open-ocean-sounding/echopy.git
 pip install ./echopy
 ```
 
