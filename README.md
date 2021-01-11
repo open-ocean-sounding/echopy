@@ -1,9 +1,10 @@
+[![](https://img.shields.io/badge/-github-blueviolet)](https://github.com/open-ocean-sounding/echopy)
+[![](https://img.shields.io/badge/-pypi-blue)](https://pypi.org/project/echopy)
+[![](https://img.shields.io/badge/-readthedocs-9cf)](https://readthedocs.org/projects/echopy)  
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/echopy?style=plastic)](https://www.python.org/)
 ![Lifecycle](https://img.shields.io/badge/lifecycle-experimental-orange.svg?style=plastic)
-[![GitHub Download](https://img.shields.io/github/repo-size/open-ocean-sounding/echopy?style=plastic)](https://github.com/open-ocean-sounding/echopy/archive/main.zip)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/echopy?label=PyPI%20downloads&style=plastic)](https://badge.fury.io/py/echopy)
 [![GitHub](https://img.shields.io/github/license/open-ocean-sounding/echopy?style=plastic)](LICENSE.md)
-<!--[![PyPI](https://img.shields.io/pypi/v/echopy?style=plastic)](https://badge.fury.io/py/echopy)-->
 
 <img src="logo.png" alt="Echopy logo" width="570"/>
 
