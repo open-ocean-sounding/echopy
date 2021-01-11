@@ -1,10 +1,12 @@
 # ignore git sync of files in this folder:
-__pycache__/
 .DS_Store
+.Rhistory
+build/
+dist/
+echopy.egg-info/
+__pycache__/
 private/
 data/*
-examples/untitled*
-rapidkrill/tmp/*
 
 # except this one:
 !README.md
