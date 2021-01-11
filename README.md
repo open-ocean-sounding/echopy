@@ -6,7 +6,7 @@
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/echopy?label=PyPI%20downloads&style=plastic)](https://badge.fury.io/py/echopy)
 [![GitHub](https://img.shields.io/github/license/open-ocean-sounding/echopy?style=plastic)](https://github.com/open-ocean-sounding/echopy/blob/master/LICENSE.md)
 
-<img src="https://github.com/open-ocean-sounding/echopy/blob/master/logo.png" alt="Echopy logo" width="570"/>
+![](https://raw.githubusercontent.com/open-ocean-sounding/echopy/master/logo.png)
 
 Echopy is a multipurpose library containing common algorithms for fisheries acoustic data processing, such as background noise correction, removal of seabed and corrupted pings, target detection, multifrequency analysis, and binning. The library provides building blocks that can be assembled for a variety of fisheries acoustics applications and is committed to transparency, cooperation, and universal access in fisheries acoustics software.
 
