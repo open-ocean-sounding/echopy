@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name = "echopy",
-    version = "0.0.3",
+    version = "0.0.5",
     author = "EchoPY",
     author_email = "echopy@protonmail.com",
     description= "Fisheries acoustic processing in Python",
