@@ -23,7 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__authors__ = ['Alejandro Ariza'   # wrote ryan(), ariza()
+__authors__ = ['Alejandro Ariza'   # wrote ryan(), ryan_iterable(), and wang()
                ]
 __credits__ = ['Rob Blackwell'     # supervised the code and provided ideas
                'Sophie Fielding'   # supervised the code and provided ideas               
