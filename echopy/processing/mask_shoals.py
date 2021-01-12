@@ -1,12 +1,33 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Contains different modules for masking biological aggregations such as
-shoals, schools, or swarms.
+Algorithms for masking shoals.
+    
+Copyright (c) 2020 Echopy
 
-Created on Mon Jun  3 12:58:35 2019
-@author: Alejandro Ariza, British Antarctic Survey
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 """
+
+__authors__ = ['Alejandro Ariza'   # wrote weill(), echoview()
+               ]                                 
+__credits__ = ['Rob Blackwell'     # supervised the code and provided ideas
+               'Sophie Fielding'   # supervised the code and provided ideas               
+               ]
 
 import numpy as np
 import scipy.ndimage as nd
@@ -111,7 +132,7 @@ def weill(Sv, thr=-70, maxvgap=5, minvlen=0, minhlen=0):
 def echoview(Sv, idim, jdim,
              thr=-70, mincan=(3,10), maxlink=(3,15), minsho=(3,15)):
     """
-    Shoals detection algorithm as implemented in echoview.
+    Shoals detection algorithm as described in echoview.
     
     In progress.
     
@@ -240,5 +261,5 @@ def other():
         author or method name. If already published, the full citation must be
         provided. Please, add "unpub." otherwise. E.g: Smith et al. (unpub.)
         
-        Please, check DESIGN.md to adhere to our coding style.
+        Please, check contribute.md to follow our coding and documenting style.
     """

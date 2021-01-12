@@ -1,12 +1,33 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Read calibration parameters from different calibration files and return them 
-in a object, following PyEcholab's nomenclature
- 
-Created on Tue Jul 17 12:18:51 2018
-@author: Alejandro Ariza, British Antarctic Survey 
+Modules for reading calibration files.
+    
+Copyright (c) 2020 Echopy
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 """
+
+__authors__ = ['Alejandro Ariza'   # wrote environment(), ices(), lobes(), and
+               ]                   # lobes2params(), echoview()
+__credits__ = ['Rob Blackwell'     # supervised the code and provided ideas
+               'Sophie Fielding'   # supervised the code and provided ideas               
+               ]
 import numpy as np
 import toml
 
@@ -303,5 +324,5 @@ def other():
         Further calibration file readers must be named with the file's
         name or format.
         
-        Please, check /DESIGN.md to adhere to our coding style.
+        Please, check contribute.md to follow our coding and documenting style.
     """

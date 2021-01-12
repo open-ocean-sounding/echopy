@@ -1,11 +1,33 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Mask Sv based on the signal-to-noise values.
+Algorithms for masking data based on signal-to-noise ratio.
+    
+Copyright (c) 2020 Echopy
 
-Created on Thu Jul  5 14:13:15 2018
-@author: Alejandro Ariza, British Antartic Survey
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 """
+
+__authors__ = ['Alejandro Ariza'   # wrote derobertis(), fielding()
+               ]
+__credits__ = ['Rob Blackwell'     # supervised the code and provided ideas
+               'Sophie Fielding'   # supervised the code and provided ideas               
+               ]
 
 import numpy as np
 from echopy import transform as tf
@@ -72,5 +94,5 @@ def other():
         name. If already published, the full citation must be provided. Please,
         add "unpub." otherwise. E.g: Smith et al. (unpub.)
         
-        Please, check /DESIGN.md to adhere to our coding style.
+        Please, check contribute.md to follow our coding and documenting style.
     """

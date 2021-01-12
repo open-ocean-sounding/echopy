@@ -1,11 +1,34 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Common unit transformations in fisheries acoustics.
+Algorithms for tranformation of acoustic units.
+    
+Copyright (c) 2020 Echopy
 
-Created on Tue Jun 25 17:37:06 2019
-@author: Alejandro Ariza, British Antarctic Survey
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 """
+
+__authors__ = ['Alejandro Ariza'   # wrote lin(), log(), Sv2sa(), Sv2NASC(),
+               ]                   # pos2dis(), and dis2speed()
+
+__credits__ = ['Rob Blackwell'     # supervised the code and provided ideas
+               'Sophie Fielding'   # supervised the code and provided ideas               
+               ]
 
 import numpy as np
 from echopy import resample as rs

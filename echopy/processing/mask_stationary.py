@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Mask stationary or near stationary data based on vessel speed
+Filters for masking stationary or near stationary data based on vessel speed
 
-Created on Fri Apr 27 14:34:17 2018
-@author: Alejandro Ariza, British Antarctic Survey 
 """
 
 def mask_stationary(Sv, speed, threshold):

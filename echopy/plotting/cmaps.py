@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Load in-house colormaps
+Colormap classes
+"""
 
-Created on Thu Aug 16 20:25:59 2018
-@author: Alejandro Ariza, British Antarctic Survey
-"""
+__authors__ = ['Alejandro Ariza'   # wrote cmaps()
+               ]                   
 
 
 class cmaps():

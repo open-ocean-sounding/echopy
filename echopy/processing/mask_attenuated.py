@@ -1,14 +1,36 @@
 #!/usr/bin/env python3
 """
-Contains different modules for masking Attenuated Signal (AS).
+Algorithms for masking attebuated signal.
     
-Created on Fri Apr 27 14:18:05 2018
-@author: Alejandro Ariza, British Antarctic Survey
+Copyright (c) 2020 Echopy
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 """
+
+__authors__ = ['Alejandro Ariza'   # wrote ryan(), ariza()
+               ]
+__credits__ = ['Rob Blackwell'     # supervised the code and provided ideas
+               'Sophie Fielding'   # supervised the code and provided ideas               
+               ]
 
 import numpy as np
 from echopy.transform import lin, log
-from echopy.resample import twod, full
 from skimage.measure import label
 
 def ryan(Sv, r, r0, r1, n, thr, start=0):
@@ -87,7 +109,7 @@ def ryan(Sv, r, r0, r1, n, thr, start=0):
          
     return [mask[:, start:], mask_[:, start:]]
 
-def ariza_seabed(Sv, r, offset=20, thr=(-40,-35), m=20, n=50):
+def ariza(Sv, r, offset=20, thr=(-40,-35), m=20, n=50):
     """
     Mask attenuated pings by looking at seabed breaches.
     
@@ -150,5 +172,5 @@ def other():
         author or method name. If already published, the full citation must be
         provided. Please, add "unpub." otherwise. E.g: Smith et al. (unpub.)
         
-        Please, check DESIGN.md to adhere to our coding style.
+        Please, check contribute.md to follow our coding and documenting style.
     """

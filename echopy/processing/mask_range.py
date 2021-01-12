@@ -1,10 +1,32 @@
 #!/usr/bin/env python3
 """
-Contains different depth range masking operations.
- 
-Created on Tue May  8 14:14:34 2018
-@author: Alejandro Ariza, British Antarctic Survey 
+Filters for masking data based on depth range.
+    
+Copyright (c) 2020 Echopy
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 """
+
+__authors__ = ['Alejandro Ariza'   # wrote above(), below(), inside(), outside()
+               ]                                 
+__credits__ = []
+
 import numpy as np
 
 def above(Sv, r, r0):
@@ -87,6 +109,5 @@ def outside(Sv, r, r0, r1):
 def other():
     """   
     Note to contributors:
-        Please, check /DESIGN.md and adhere to our coding style
-        for other range masking operations.
+        Please, check contribute.md to follow our coding and documenting style.
     """
