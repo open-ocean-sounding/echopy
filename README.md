@@ -34,6 +34,7 @@ Echopy has essentially grown from code that was initially implemented to support
 * [**Alejandro Ariza**](https://github.com/alejandro-ariza) - *French National Research Institute for Sustainable Development (IRD)*
 * [**Robert Blackwell**](https://github.com/RobBlackwell) - *British Antarctic Survey*
 * [**Sophie Fielding**](https://github.com/bas-sof) - *British Antarctic Survey*
+* [**Etienne Pauthenet**](https://github.com/EPauthenet) - *LOCEAN, Sorbonne Université*
 * **Xinliang WANG** - *Yellow Sea Fisheries Research institute*
 
 ## Acknowledgments
