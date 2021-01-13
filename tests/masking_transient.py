@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 """
 Example script that reads Sv, mask transient noise, and display results.
-
-Notes: Get files in ftp://ftp.bas.ac.uk/rapidkrill/ and allocate them in the
-corresponding directory for this to work
-
-Created on Thu Jul 19 17:39:00 2018
-@author: Alejandro Ariza, British Antarctic Survey
 """
+
+__authors__ = ['Alejandro Ariza'
+               ]
+ 
 # import modules
 import numpy as np
 import matplotlib.pyplot as plt
@@ -77,4 +75,4 @@ plt.title('Sv 38 kHz - transient noise masked')
 plt.xlabel('Time (dd HH:MM)')
 
 plt.show()
-#plt.savefig('example_mask_transient.png', dpi = 150)
+#plt.savefig('masking_transient.png', dpi=150)

@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 """
 Example script that reads Sv, mask attenuated signal, and display results.
-
-Notes: Get files in ftp://ftp.bas.ac.uk/rapidkrill/ and allocate them in the
-corresponding directory for this to work
-
-Created on Thu Jul 19 17:39:00 2018
-@author: Alejandro Ariza, British Antarctic Survey
 """
+
+__authors__ = ['Alejandro Ariza'
+               ] 
 
 # import modules
 import numpy as np
@@ -77,4 +74,4 @@ plt.title('Sv 38 kHz - attenuated signal masked')
 plt.xlabel('Time (dd HH:MM)')
 
 plt.show()
-#plt.savefig('example_mask_attenuated.png', dpi = 150)
+#plt.savefig('masking_attenuated.png', dpi=150)

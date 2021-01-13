@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Example masking krill swarms.
-
-Created on Mon Jul  8 11:52:09 2019
-@author: Alejandro Ariza, British Antarctic Survey
 """
+
+__authors__ = ['Alejandro Ariza'
+               ] 
 
 #------------------------------------------------------------------------------
 # import modules
@@ -82,4 +81,4 @@ plt.colorbar(im, cax=ax).set_label('dB re m$^{-1}$')
 
 # Show and save
 plt.show()
-plt.savefig('masking_swarms.png', figsize=(8,5), dpi=150)
+# plt.savefig('masking_swarms.png', figsize=(8,5), dpi=150)

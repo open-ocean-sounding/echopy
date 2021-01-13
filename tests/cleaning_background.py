@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Example cleaning background noise.
-
-Created on Fri Jul  5 16:48:44 2019
-@author: Alejandro Ariza, British Antarctic Survey
 """
+
+__authors__ = ['Alejandro Ariza'
+               ]
+ 
 #------------------------------------------------------------------------------
 # import modules
 import os
@@ -85,4 +85,4 @@ plt.title('Sv clean')
 # Show and save
 plt.tight_layout()
 plt.show()
-plt.savefig('cleaning_background_noise.png', figsize=(8,7), dpi=150)
+# plt.savefig('cleaning_background.png', figsize=(8,7), dpi=150)

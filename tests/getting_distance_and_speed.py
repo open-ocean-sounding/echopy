@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Example getting cumulated distance and speed from longitude and latitude
 positions.
-
-Created on Fri Jul 12 12:30:55 2019
-@author: Alejandro Ariza, British Antarctic Survey
 """
+
+__authors__ = ['Alejandro Ariza'
+               ] 
 
 #------------------------------------------------------------------------------
 # import modules
@@ -51,4 +50,4 @@ plt.xlabel('Time (dd HH:MM)')
 # Show and save
 plt.tight_layout()
 plt.show()
-plt.savefig('getting_distance_and_speed.png', figsize=(6,4), dpi=150)
+# plt.savefig('getting_distance_and_speed.png', figsize=(6,4), dpi=150)

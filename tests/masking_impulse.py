@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Example using mask_impulse.py for masking impulse noise in acoustic data
 collected norwest off South Georgia.
-
-Created on Tue Jun 11 11:05:12 2019
-@author: Alejandro Ariza, British Antarctic Survey
 """
+
+__authors__ = ['Alejandro Ariza'
+               ] 
 
 #------------------------------------------------------------------------------
 # import modules
@@ -75,4 +74,4 @@ plt.title('IN off (Wang)')
 # Show and save
 plt.tight_layout()
 plt.show()
-#plt.savefig('masking_impulse_noise.png', figsize=(8,4), dpi=150)
+#plt.savefig('masking_impulse.png', figsize=(8,4), dpi=150)

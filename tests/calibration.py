@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 """
-Example script that read, calibrate and display acoustic data
-
-Notes: Get files in ftp://ftp.bas.ac.uk/rapidkrill/ and allocate them in the
-corresponding directory for this to work
-
-Created on Mon Jul 16 13:11:44 2018
-@author: Alejandro Ariza, British Antarctic Survey
+Example script that read, calibrate and display acoustic data.
 """
+
+__authors__ = ['Alejandro Ariza'
+               ] 
 
 # import modules
 import numpy as np
@@ -72,4 +69,4 @@ plt.ylabel('Depth (m)')
 plt.xlabel('Time (dd HH:MM)')
 
 plt.show()
-#plt.savefig('example_calibrate.png', dpi = 150)
+# plt.savefig('calibration.png', dpi=150)

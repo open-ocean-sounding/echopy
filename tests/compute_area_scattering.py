@@ -109,4 +109,4 @@ ax[1].set_title('Nautical area scattering coefficient, integrated from 20 to 250
 # Show and save
 plt.tight_layout()
 plt.show()
-plt.savefig('integrating_sa_and_NASC.png', figsize=(8,4), dpi=150)
+# plt.savefig('compute_area_scattering.png', figsize=(8,4), dpi=150)

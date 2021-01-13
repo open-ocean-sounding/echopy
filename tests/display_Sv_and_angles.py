@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
 """
-Display Sv together with along-ship (theta) and athwart-ship (phi) angles
-
-Notes: Get files in ftp://ftp.bas.ac.uk/rapidkrill/ and allocate them in the
-corresponding directory for this to work
-
-Created on Thu Aug  9 20:55:14 2018
-@author: Alejandro Ariza, British Antarctic Survey
+Display Sv together with along-ship (theta) and athwart-ship (phi) angles.
 """
 
+__authors__ = ['Alejandro Ariza'
+               ]
+ 
 # import modules
 import numpy as np
 import matplotlib.pyplot as plt
@@ -65,4 +62,4 @@ plt.title('Athwart-ship angle')
 plt.xlabel('Time (dd HH:MM)')
 
 plt.show()
-#plt.savefig('example_display_Sv_and_angles.png', dpi = 150)
+#plt.savefig('display_Sv_and_angles.png', dpi = 150)

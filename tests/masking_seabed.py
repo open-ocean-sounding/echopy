@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 """
-Example script that mask seabed
-
-Notes: Get files in ftp://ftp.bas.ac.uk/rapidkrill/ and allocate them in the
-corresponding directory for this to work
-
-Created on Thu Aug  2 17:16:19 2018
-@author: Alejandro Ariza, British Antarctic Survey
+Example script that masks seabed.
 """
+
+__authors__ = ['Alejandro Ariza'
+               ] 
 
 # import modules
 import numpy as np
@@ -78,4 +75,4 @@ plt.xlabel('Time (dd HH:MM)')
 plt.title('Sv 38 kHz - seabed masked')
 
 plt.show()
-#plt.savefig('example_mask_seabed.png', dpi = 150)
+#plt.savefig('masking_seabed.png', dpi=150)
