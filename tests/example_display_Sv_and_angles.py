@@ -14,7 +14,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 from echolab2.instruments import EK60
-from echopy.cmaps import cmaps
+from echopy.plotting.cmaps import cmaps
 
 # =============================================================================
 # load raw file

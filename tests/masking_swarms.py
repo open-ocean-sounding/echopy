@@ -15,11 +15,11 @@ from scipy.signal import convolve2d
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from echolab2.instruments import EK60
-from echopy import mask_impulse as mIN
-from echopy import mask_range as mRG
-from echopy import transform as tf
-from echopy import mask_shoals as mSH
-from echopy.cmaps import cmaps
+from echopy.processing import mask_impulse as mIN
+from echopy.processing import mask_range as mRG
+from echopy.utils import transform as tf
+from echopy.processing import mask_shoals as mSH
+from echopy.plotting.cmaps import cmaps
 
 #------------------------------------------------------------------------------
 # load rawfile

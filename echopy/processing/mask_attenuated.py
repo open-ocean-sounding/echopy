@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Algorithms for masking attebuated signal.
+Algorithms for masking attenuated signal.
     
 Copyright (c) 2020 Echopy
 
@@ -23,14 +23,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__authors__ = ['Alejandro Ariza'   # wrote ryan(), ariza()
+__authors__ = ['Alejandro Ariza'   # wrote ryan(), and ariza()
                ]
 __credits__ = ['Rob Blackwell'     # supervised the code and provided ideas
                'Sophie Fielding'   # supervised the code and provided ideas               
                ]
 
 import numpy as np
-from echopy.transform import lin, log
+from echopy.utils.transform import lin, log
 from skimage.measure import label
 
 def ryan(Sv, r, r0, r1, n, thr, start=0):

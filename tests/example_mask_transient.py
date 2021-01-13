@@ -13,9 +13,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 from echolab2.instruments import EK60
-from echopy import read_calibration as readCAL
-from echopy import mask_transient as maskTN
-from echopy.cmaps import cmaps
+from echopy.reading import read_calibration as readCAL
+from echopy.processing import mask_transient as maskTN
+from echopy.plotting.cmaps import cmaps
 
 # =============================================================================
 # load raw file

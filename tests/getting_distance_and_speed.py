@@ -13,7 +13,7 @@ Created on Fri Jul 12 12:30:55 2019
 import os
 import matplotlib.pyplot as plt
 from echolab2.instruments import EK60
-from echopy import transform as tf
+from echopy.utils import transform as tf
 
 #------------------------------------------------------------------------------
 # load rawfile

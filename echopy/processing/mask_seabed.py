@@ -32,7 +32,7 @@ __credits__ = ['Rob Blackwell'     # supervised the code and provided ideas
                ]
 
 import numpy as np
-from echopy.transform import lin, log
+from echopy.utils.transform import lin, log
 from skimage.morphology import remove_small_objects
 from skimage.morphology import erosion
 from skimage.morphology import dilation

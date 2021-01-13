@@ -13,9 +13,9 @@ Created on Tue Jun 11 11:05:12 2019
 import os
 import numpy as np
 from echolab2.instruments import EK60
-from echopy import mask_impulse as mIN
+from echopy.processing import mask_impulse as mIN
 import matplotlib.pyplot as plt
-from echopy.cmaps import cmaps
+from echopy.plotting.cmaps import cmaps
 
 #------------------------------------------------------------------------------
 # load rawfile

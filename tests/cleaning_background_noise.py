@@ -12,10 +12,10 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from echolab2.instruments import EK60
-from echopy import transform as tf
-from echopy import get_background as gBN
-from echopy import mask_signal2noise as mSN
-from echopy.cmaps import cmaps
+from echopy.utils import transform as tf
+from echopy.processing import get_background as gBN
+from echopy.processing import mask_signal2noise as mSN
+from echopy.plotting.cmaps import cmaps
 
 #------------------------------------------------------------------------------
 # load rawfile

@@ -30,7 +30,7 @@ __credits__ = ['Rob Blackwell'     # supervised the code and provided ideas
                ]
 
 import numpy as np
-from echopy.transform import lin, log
+from echopy.utils.transform import lin, log
 
 def ryan(Sv, r, m, n, thr,
          excludeabove=250, operation='percentile15'):

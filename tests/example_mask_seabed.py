@@ -14,9 +14,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 from echolab2.instruments import EK60
-from echopy import operations as op
-from echopy import mask_seabed as  maskSB
-from echopy.cmaps import cmaps
+from echopy import operations as op #TODO: deprecated, change to resample()
+from echopy.processing import mask_seabed as  maskSB
+from echopy.plotting.cmaps import cmaps
 
 # =============================================================================
 # load raw file

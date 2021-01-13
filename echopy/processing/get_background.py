@@ -31,7 +31,7 @@ __credits__ = ['Rob Blackwell'     # supervised the code and provided ideas
 
 import warnings
 import numpy as np
-from echopy import resample as rs
+from echopy.processing import resample as rs
 
 def derobertis(Sv, iax, jax, m, n, r, alpha, bgnmax=-125):
     """

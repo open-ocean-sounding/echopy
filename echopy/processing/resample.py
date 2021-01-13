@@ -30,7 +30,7 @@ __credits__ = []
 # import modules
 import warnings
 import numpy as np
-from echopy import transform as tf
+from echopy.utils import transform as tf
 from scipy.interpolate import interp1d
 
 def twod(data, idim, jdim, irvals, jrvals, log=False, operation='mean'):

@@ -23,14 +23,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-__authors__ = ['Alejandro Ariza'   # wrote derobertis(), fielding()
+__authors__ = ['Alejandro Ariza'   # wrote derobertis(), and fielding()
                ]
 __credits__ = ['Rob Blackwell'     # supervised the code and provided ideas
                'Sophie Fielding'   # supervised the code and provided ideas               
                ]
 
 import numpy as np
-from echopy import transform as tf
+from echopy.utils import transform as tf
 
 def derobertis(Sv, bgn, thr):
     """

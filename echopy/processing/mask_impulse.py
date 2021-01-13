@@ -33,8 +33,8 @@ import numpy as np
 from skimage.morphology import erosion
 from skimage.morphology import dilation
 from scipy.ndimage.filters import median_filter as medianf
-from echopy import resample as rs
-from echopy import transform as tf
+from echopy.processing import resample as rs
+from echopy.utils import transform as tf
 
 def ryan(Sv, iax, m, n=1, thr=10):
     """

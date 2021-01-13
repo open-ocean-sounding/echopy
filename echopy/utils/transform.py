@@ -31,7 +31,7 @@ __credits__ = ['Rob Blackwell'     # supervised the code and provided ideas
                ]
 
 import numpy as np
-from echopy import resample as rs
+from echopy.processing import resample as rs
 from geopy.distance import distance
 
 def lin(variable):
