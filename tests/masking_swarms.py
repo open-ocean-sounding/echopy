@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Example masking krill swarms.
-
-Created on Mon Jul  8 11:52:09 2019
-@author: Alejandro Ariza, British Antarctic Survey
 """
+
+__authors__ = ['Alejandro Ariza'
+               ] 
 
 #------------------------------------------------------------------------------
 # import modules
@@ -15,11 +14,11 @@ from scipy.signal import convolve2d
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from echolab2.instruments import EK60
-from echopy import mask_impulse as mIN
-from echopy import mask_range as mRG
-from echopy import transform as tf
-from echopy import mask_shoals as mSH
-from echopy.cmaps import cmaps
+from echopy.processing import mask_impulse as mIN
+from echopy.processing import mask_range as mRG
+from echopy.utils import transform as tf
+from echopy.processing import mask_shoals as mSH
+from echopy.plotting.cmaps import cmaps
 
 #------------------------------------------------------------------------------
 # load rawfile
@@ -82,4 +81,4 @@ plt.colorbar(im, cax=ax).set_label('dB re m$^{-1}$')
 
 # Show and save
 plt.show()
-plt.savefig('masking_swarms.png', figsize=(8,5), dpi=150)
+# plt.savefig('masking_swarms.png', figsize=(8,5), dpi=150)
