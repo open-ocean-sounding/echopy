@@ -26,14 +26,15 @@ SOFTWARE.
 __authors__ = ['Alejandro Ariza'   # wrote weill(), echoview()
                ]                                 
 __credits__ = ['Rob Blackwell'     # supervised the code and provided ideas
-               'Sophie Fielding'   # supervised the code and provided ideas               
+               'Sophie Fielding'   # supervised the code and provided ideas
+               'Nhan Vu'           # contributed to weill()
                ]
 
 import numpy as np
 import scipy.ndimage as nd
 import pandas as pd
 
-def weill(Sv, thr=-70, maxvgap=5, maxhgap=5, minvlen=0, minhlen=0):
+def weill(Sv, thr=-70, maxvgap=5, maxhgap=0, minvlen=0, minhlen=0):
     """
     Detects and masks shoals following the algorithm decribed in:
         
@@ -54,8 +55,10 @@ def weill(Sv, thr=-70, maxvgap=5, maxhgap=5, minvlen=0, minhlen=0):
         
     Although the default settings strictly complies with Weill's contiguity
     criteria, other contiguity arguments has been enabled in this function to
-    increase operability. For instance, the posibility to set minimum vertical
-    and horizontal lengths for a feature to be regarded as a shoal.
+    increase operability. For instance, the posibility to allow gaps in the
+    horizontal, or to set minimum vertical and horizontal lengths for a feature 
+    to be regarded as a shoal. These settings are set to zero (not applicable)
+    by default.
     
     Args:
         Sv (float): 2D numpy array with Sv data (dB).
