@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """
 Funtional Data Analysis on multifrequency acoustic data. 
-Adapted from the R package 'fda.oce' (https://github.com/EPauthenet/fda.oce) 
+Adapted from the R package 'fda.oce' (https://github.com/EPauthenet/fda.oce)
+to work on multifrequency and depth-varying acoustic data, as explained in 
+"Ariza et al. (under review). Acoustic seascape partitioning through functional 
+data analysis". 
 
-Copyright (c) 2020 Echopy
+Copyright (c) 2020 EchoPY
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -32,78 +35,115 @@ __credits__ = ['Etienne Pauthenet' # supervised + provided original code
 import copy
 import numpy as np
 from skfda.representation import basis, FDataGrid
-from skfda.misc.regularization import TikhonovRegularization
-from skfda.misc.operators import LinearDifferentialOperator
+from skfda.misc.regularization import L2Regularization
 
-def get_fdo(Sv, r, f, var, nb, order):
+def get_fdo(Sv, r, nb, order=4, f=None, var=None):
     """
-    Creates a functional data object from Sv data.
+    Creates a functional data object from single-freqeuncy or multifrequency
+    Sv data.
     
     Args:
-        Sv (float): 3D numpy array with Sv data (dB), with dimensions:
+        Sv (float): 2D or 3D numpy array with Sv data (dB), with dimensions:
             - 1st: range
             - 2nd: time
-            - 3st: frequency
-        r (float): 1d numpy array with range data (m).
-        f (float): 1d numpy array with frequency data (kHz).
-        var (dict): Variables to create the functional data object, where:
+            - 3st: frequency (if Sv is a 3D-array)
+        r (float): 1D numpy array with range data (m).
+        nb (int): Number of basis for the functional data object.
+        order (int): Order of basis functions.
+        f (float): list or 1D-numpy array with frequency data (kHz).
+        var (dict): Variables included in the functional data object. It
+            should indicate the frequency and the depth interval of each
+            variable with the following structure:
             - keys (str): variable names
             - values (int): 3-integers tuple with the following information:
                 - 1: frequency (kHz)
                 - 2: upper range (m)
-                - 3: lower range (m)
-        nb (int): Number of basis for the functional data object.
-        order (int): Order of basis functions.
+                - 3: lower range (m)     
         
     Returns:
         object: Functional data object.
         
     Notes:
-        Number of elements and range extent must be equivalent among variables.
-        
+        By default, the function accepts 2D-single-frequency Sv arrays and the
+        unique variable considered will be that at the frequency provided, and
+        considering the full depth range provided. If 3D-multifrequency data is
+        provided and more than one variable is defined at each frequency, the
+        depth range of variables must be consistent. Further details in Ariza 
+        et al. (under review). Acoustic seascape partitioning through 
+        functional data analysis. 
+                                               
     Examples:    
         # Convert variables 38 kHz from 10 to 200 m, 120 kHz from 10 to 200 m, 
         # and 38 kHz from 200 to 390 m into a functional data objected defined
-        # by 20 B-spline third-degree polinomials for every variable:
+        # by 20 basis for every variable:
+        Sv  = ... # a 3D-array.
+        r   = ... # 1D-array with length equalt to 1st Sv dimension
+        f   = [38, 120] # 1D-array with length equalt to 3rd Sv dimension    
         var = {'038kHz_010-200m': ( 38,  10, 200),
                '120kHz_010-200m': (120,  10, 200),
                '038kHz_200-390m': ( 38, 200, 390)}
-        fdo = get_fdobj(Sv, r, fre, var, 20, 3)
+        fdo = get_fdobj(Sv, r, 20, f=f, var=var)
     """
     
-    # check for proper inputs
-    if not isinstance(Sv, np.ndarray):
-        raise Exception('\'Sv\' must be a 3d-numpy array')
+    # Check Sv and convert from 2d to 3d array
+    if (Sv.ndim!=2)&(Sv.ndim!=3):
+        raise Exception('\'Sv\' array must have 2 or 3 dimensions')
+    if Sv.ndim==2:
+        Sv = Sv[:,:, np.newaxis]
+        
+    # provide missing inputs
+    if f is None:
+        f = [0]
+    if var is None:
+        var = {'var1': (0, r[0], r[-1])}
+    
+    # check rest of inputs
     if not isinstance(r, np.ndarray):
         raise Exception('\'r\' must be a 1d-numpy array')
-    if not isinstance(f, np.ndarray):
-        raise Exception('\'f\' must be a 1d-numpy array')
-    if not isinstance(var, dict):
-        raise Exception('\'var\' must be a dictionary')
+    if r.ndim!=1:
+        raise Exception('\'r\' array must have 1 dimension')
+    if not isinstance(Sv, np.ndarray):
+        raise Exception('\'Sv\' must be a 2d- or 3d-numpy array')
+    if Sv.shape[0]!=len(r):
+        raise Exception('\'r\' and \'Sv\' 1st dimension lengths must be equal')
     if not isinstance(nb, int):
         raise Exception('\'nb\' must be an integer')
     if not isinstance(order, int):
-        raise Exception('\'order\' must be an integer')
-    if Sv.ndim!=3:
-        raise Exception('\'Sv\' array must have 3 dimensions')
-    if r.ndim!=1:
-        raise Exception('\'r\' array must have 1 dimension')
-    if f.ndim!=1:
-        raise Exception('\'f\' array must have 1 dimension')
-    if Sv.shape[0]!=len(r):
-        raise Exception('\'r\' and \'Sv\' 1st dimension lengths must be equal')
-    if Sv.shape[-1]!=len(f):
-        raise Exception('\'f\' and \'Sv\' 3rd dimension lenghts must be equal')  
-    x0 = list(var.values())[0]
-    for xi in var.values():
-        if not isinstance(xi, tuple):
-            raise Exception('variable values must contain only 3-elements tuples')
-        if len(xi)!=3:
-            raise Exception('variable values must contain only 3-elements tuples')
-        if xi[0] not in f:
-            raise Exception('%s kHz frequency is not available' % xi[0])
-        if x0[2]-x0[1] != xi[2]-xi[1]:
-            raise Exception('range extent of variables might be consistent') 
+        raise Exception('\'order\' must be an integer')      
+    if not (isinstance(f, np.ndarray) | isinstance(f, list)):
+        raise Exception('if multifrequency Sv is provided, \'f\' must be '
+                        +'a list or an array with length equal to the 3rd '
+                        +'dimension of the Sv array')
+    if not isinstance(var, dict):
+        raise Exception('if multifrequency Sv is provided, \'var\' must '
+                        +'be a dictionary with names, frequency, and '
+                        +'depth interval of the variables to be analyzed')           
+    if isinstance(f, np.ndarray):
+        if f.ndim!=1:
+            raise Exception('\'f\' array must have 1 dimension')
+    if isinstance(f, np.ndarray)|isinstance(f, list):
+        if Sv.shape[-1]!=len(f):
+            raise Exception('\'f\' & \'Sv\' 3rd dimension lenght must match')  
+    if isinstance(var, dict):   
+        x0 = list(var.values())[0]
+        for k, v in zip(var.keys(), var.values()):
+            if not isinstance(v, tuple):
+                raise Exception('variable values must be a 3-element tuple')
+            if len(v)!=3:
+                raise Exception('variable values must be a 3-element tuple')
+            if v[0] not in f:
+                raise Exception('%s kHz frequency not available' % v[0])
+            if x0[2]-x0[1] != v[2]-v[1]:
+                raise Exception('range extent of variables might be consistent')
+            if v[1]<r[0]:
+                raise Exception(('%s m is above the depth range available for '
+                                +'%s kHz, define a different upper depth ' 
+                                + 'for variable \'%s\'.') % (v[1], v[0], k))
+            if v[2]>r[-1]:
+                raise Exception(('%s m is below the depth range available for '
+                                +'%s kHz, define a different lower depth ' 
+                                + 'for variable \'%s\'.') % (v[2], v[0], k))
+    
     
     # interate through variables
     for i, key in enumerate(var.keys()):
@@ -112,13 +152,17 @@ def get_fdo(Sv, r, f, var, nb, order):
         fi = var[key][0]
         r0 = var[key][1]
         r1 = var[key][2] 
-        k  = np.where(f==fi)[0][0]
-        i0 = np.argmin(abs(r-r0))
-        i1 = np.argmin(abs(r-r1))
+        k  = np.where([x==fi for x in f])[0][0]
+        minpositive                = r-r0 *1.0
+        minpositive[minpositive<0] = np.inf
+        maxnegative                = r-r1 *1.0
+        maxnegative[maxnegative>0] = -np.inf 
+        i0 = np.argmin(minpositive)
+        i1 = np.argmax(maxnegative)
         
         # get Sv and range domain for every variable
-        y  = Sv[i0:i1, :, k]
-        x  = r [i0:i1      ] - r0
+        y  = Sv[i0:i1+1, :, k]
+        x  = r [i0:i1+1      ] - r[i0]
         x0 = x[ 0]
         x1 = x[-1]
                      
@@ -130,9 +174,9 @@ def get_fdo(Sv, r, f, var, nb, order):
         if i==0:
             fdo              = copy.deepcopy(fdo_i)
             fdo.dim_names    = [key]
-            fdo.domain_depth = [(r0, r1)]
+            fdo.domain_depth = [(r[i0], r[i1])]
         else:
-            fdo.domain_depth.append((r0, r1))
+            fdo.domain_depth.append((r[i0], r[i1]))
             fdo.dim_names.append(key)
             fdo.coefficients = np.dstack((fdo.coefficients,fdo_i.coefficients))
             
@@ -156,7 +200,7 @@ def get_fpca(fdo):
             - 'pval'    : Percentage of variance of PCs.
             - 'vecnotWM': PCs vectors
             - 'vectors' : PCs weighted vectors
-            - 'axes'    : ? #TODO Etienne?
+            - 'axes'    : Axes
             - 'pc'      : PCs projected on the modes
     """
     
@@ -180,7 +224,7 @@ def get_fpca(fdo):
     Cc = C - Cm[np.newaxis,:]
     
     # get basis penalty matrix
-    regularization = TikhonovRegularization(LinearDifferentialOperator(0))
+    regularization = L2Regularization()
     penalty        = regularization.penalty_matrix(fdo.basis)
     
     # compute crossed-covariance matrix of C and Inertia
@@ -264,7 +308,7 @@ def get_fvar(fdo, fpca, pc, res):
             - 'ymean' : 1d-array with Sv mean profile (dB)
             - 'yplus' : 1d-array with effect of adding PC variance (dB)
             - 'yminus': 1d-array with effect of subtracting PC variance (dB)
-            - '%dim'  : total variance explained by each variable (%) #TODO: consider new name
+            - '%dim'  : total variance explained by each variable (%)
             - '%pc'   : total variance explained by the PC (%).       
     """
     
