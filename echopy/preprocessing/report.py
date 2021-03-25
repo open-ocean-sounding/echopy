@@ -129,14 +129,16 @@ def write(rawdir, save=False, txtfile='filereport.txt',
                       'h0'    ,'h1'    ,
                       'sun0'  ,'sun1'  ,
                       'seabed',                                 
-                      'lonmin','lonp25','lonmed','lonp75','lonmax',
-                      'latmin','latp25','latmed','latp75','latmax',
-                      'kntmin','kntp25','kntmed','kntp75','kntmax',                               
+                      'lonmin','lonmed','lonmax',
+                      'latmin','latmed','latmax',
+                      'kntmin','kntmed','kntmax',                               
                       'f18'   ,'f38'   ,'f70'   ,'f120'  ,'f200'  ,'f333',
                       'p18'   ,'p38'   ,'p70'   ,'p120'  ,'p200'  ,'p333',
                       'l18'   ,'l38'   ,'l70'   ,'l120'  ,'l200'  ,'l333',
                       'i18'   ,'i38'   ,'i70'   ,'i120'  ,'i200'  ,'i333',
-                      'c18'   ,'c38'   ,'c70'   ,'c120'  ,'c200'  ,'c333'])
+                      'c18'   ,'c38'   ,'c70'   ,'c120'  ,'c200'  ,'c333',
+                      'g18'   ,'g38'   ,'g70'   ,'g120'  ,'g200'  ,'g333',
+                      's18'   ,'s38'   ,'s70'   ,'s120'  ,'s200'  ,'s333'])
     
     # iterate through RAW files
     errors = []
@@ -302,7 +304,9 @@ def write(rawdir, save=False, txtfile='filereport.txt',
         p18,p38,p70,p120,p200,p333 = np.nan,np.nan,np.nan,np.nan,np.nan,np.nan
         l18,l38,l70,l120,l200,l333 = np.nan,np.nan,np.nan,np.nan,np.nan,np.nan
         i18,i38,i70,i120,i200,i333 = np.nan,np.nan,np.nan,np.nan,np.nan,np.nan
-        c18,c38,c70,c120,c200,c333 = np.nan,np.nan,np.nan,np.nan,np.nan,np.nan        
+        c18,c38,c70,c120,c200,c333 = np.nan,np.nan,np.nan,np.nan,np.nan,np.nan
+        g18,g38,g70,g120,g200,g333 = np.nan,np.nan,np.nan,np.nan,np.nan,np.nan 
+        s18,s38,s70,s120,s200,s333 = np.nan,np.nan,np.nan,np.nan,np.nan,np.nan         
         
         for ch, freq in enumerate(ek60.channel_ids):    
             
@@ -346,6 +350,18 @@ def write(rawdir, save=False, txtfile='filereport.txt',
                     c38 = f38.sample_count[0]
                 else:
                     c38 = -1
+                
+                #TODO: testing gain and Sa correction retrieval
+                # extend to the rest of frequencies if working
+                try:
+                    g38 = f38.current_metadata.gain
+                except:
+                    g38 = np.nan
+                try:
+                    s38 = f38.current_metadata.sa_correction_table
+                except:
+                    s38 = np.nan
+                
                 f38 = 1
             
             # at 70 kHz
@@ -439,14 +455,16 @@ def write(rawdir, save=False, txtfile='filereport.txt',
                      h0    , h1    ,
                      sun0  , sun1  ,
                      seabed,
-                     lonmin, lonp25, lonmed, lonp75, lonmax,
-                     latmin, latp25, latmed, latp75, latmax,
-                     kntmin, kntp25, kntmed, kntp75, kntmax,
+                     lonmin, lonmed, lonmax,
+                     latmin, latmed, latmax,
+                     kntmin, kntmed, kntmax,
                      f18   , f38   , f70   , f120  , f200  , f333,
                      p18   , p38   , p70   , p120  , p200  , p333,
                      l18   , l38   , l70   , l120  , l200  , l333,
                      i18   , i38   , i70   , i120  , i200  , i333,
-                     c18   , c38   , c70   , c120  , c200  , c333]
+                     c18   , c38   , c70   , c120  , c200  , c333,
+                     g18   , g38   , g70   , g120  , g200  , g333,
+                     s18   , s38   , s70   , s120  , s200  , s333]
     
     # save data frame as a text file
     if save:
@@ -466,19 +484,13 @@ def write(rawdir, save=False, txtfile='filereport.txt',
             f.write('# * sun1  : sun altitude at the end (degrees)\n')
             f.write('# * seabed: seabed depth, estimated from bathymetry (m)\n')
             f.write('# * lonmin: longitude minimum (decimal degrees)\n')
-            f.write('# * lonp25: longitude percentile 25 (decimal degrees)\n')
             f.write('# * lonmed: longitude median (decimal degrees)\n')
-            f.write('# * lonp75: longitude percentile 75 (decimal degrees)\n')
             f.write('# * lonmax: longitude maximum (decimal degrees)\n')
             f.write('# * latmin: latitude minimum (decimal degrees)\n')
-            f.write('# * latp25: latitude percentile 25 (decimal degrees)\n')
             f.write('# * latmed: latitude median (decimal degrees)\n')
-            f.write('# * latp75: latitude percentile 75 (decimal degrees)\n')
             f.write('# * latmax: latitude maximum (decimal degrees)\n')
             f.write('# * kntmin: speed minimum (knots)\n')
-            f.write('# * kntp25: speed percentile 25 (knots)\n')
             f.write('# * kntmed: speed median (knots)\n')
-            f.write('# * kntp75: speed percentile 75 (knots)\n')
             f.write('# * kntmax: speed maximum (knots)\n')
             f.write('# * f18   : Presence of 18 kHz frequency (boolean)\n')            
             f.write('# * f38   : Presence of 38 kHz frequency (boolean)\n')            
@@ -510,6 +522,19 @@ def write(rawdir, save=False, txtfile='filereport.txt',
             f.write('# * c120  : Sample count at 120 kHz. Fill value \'-1\' stands for \'variable\'\n')
             f.write('# * c200  : Sample count at 200 kHz. Fill value \'-1\' stands for \'variable\'\n')
             f.write('# * c333  : Sample count at 333 kHz. Fill value \'-1\' stands for \'variable\'\n')
+            
+            f.write('# * g18   : Gain at  18 kHz.\n')
+            f.write('# * g38   : Gain at  38 kHz.\n')
+            f.write('# * g70   : Gain at  70 kHz.\n')
+            f.write('# * g120  : Gain at 120 kHz.\n')
+            f.write('# * g200  : Gain at 200 kHz.\n')
+            f.write('# * g333  : Gain at 333 kHz.\n')
+            f.write('# * s18   : Gain at  18 kHz.\n')
+            f.write('# * s38   : Sa correction at  38 kHz.\n')
+            f.write('# * s70   : Sa correction at  70 kHz.\n')
+            f.write('# * s120  : Sa correction at 120 kHz.\n')
+            f.write('# * s200  : Sa correction at 200 kHz.\n')
+            f.write('# * s333  : Sa correction at 333 kHz.\n')
             f.write('\n')
             
             # write data as comma-separated values (csv)
