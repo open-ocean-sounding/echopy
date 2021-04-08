@@ -59,18 +59,37 @@ def log(variable):
     
     Returns:
         float: array of elements transformed
-    """    
-    if not isinstance(variable, (np.ndarray)):
-        variable = np.array([variable])
-        
-    if isinstance(variable, int):
-        variable = np.float64(variable)
-        
+    """
+    
+    # convert variable to float array
+    back2single = False
+    back2list   = False
+    back2int    = False    
+    if not isinstance(variable, np.ndarray):
+        if isinstance(variable, list):
+            variable  = np.array(variable)
+            back2list = True
+        else:
+            variable    = np.array([variable])
+            back2single = True            
+    if variable.dtype=='int64':
+        variable   = variable*1.0
+        back2int = True
+    
+    # compute logarithmic value except for zeros values, which will be -999 dB    
     mask           = np.ma.masked_less_equal(variable, 0).mask
     variable[mask] = np.nan
     log            = 10*np.log10(variable)
     log[mask]      = -999
-    return           log
+    
+    # convert back to original data format and return
+    if back2int:
+        log = np.int64(log)
+    if back2list:
+        log = log.tolist()
+    if back2single:
+        log = log[0]       
+    return log
 
 def Sv2sa(Sv, r, r0, r1, operation='mean'):
     """
