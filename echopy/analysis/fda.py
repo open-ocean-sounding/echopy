@@ -424,7 +424,7 @@ def get_fmean(fdo, res):
     # return data
     return data
 
-def reduce_fdo(fdo, fpca, pcs=(1,2,3), profiles=None):
+def reduce_fdo(fdo, fpca, pcs=(0,1,2), profiles=None):
     """
     Reduce functional data object to certain principal components (PCs) and
     profiles.
