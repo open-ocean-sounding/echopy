@@ -36,6 +36,7 @@ import copy
 import numpy as np
 from skfda.representation import basis, FDataGrid
 from skfda.misc.regularization import L2Regularization
+from echopy.utils.transform import lin, log
 
 def get_fdo(Sv, r, nb, order=4, f=None, var=None):
     """
@@ -372,7 +373,7 @@ def get_fvar(fdo, fpca, pc, res):
     # return
     return data
         
-def get_fmean(fdo, res):
+def get_fmean(fdo, res, logtransformed=True):
     """
     Computes mean profiles for every variable defined within the Functional 
     data object.
@@ -407,11 +408,17 @@ def get_fmean(fdo, res):
         y      = fdo_k.evaluate(x)[:,:, 0].T
         x      = x + fdo_k.domain_depth[k][0]
         
-        # compute 'y' mean and standard deviations
-        ymean  = np.mean(y, axis=1)
-        ystd   = np.std (y, axis=1)
-        yplus  = ymean + ystd
-        yminus = ymean - (yplus-ymean) 
+        # compute 'y' mean, confidence intervals, and standard deviations
+        if logtransformed:
+            ymean  = log(np.mean    (lin(y),       axis=1))
+            yminus = log(np.quantile(lin(y), .050, axis=1))
+            yplus  = log(np.quantile(lin(y), .950, axis=1))
+            ystd   = y*np.nan
+        else:  
+            ymean  = np.mean(y, axis=1)
+            yminus = np.quantile(y, .050, axis=1)
+            yplus  = np.quantile(y, .950, axis=1)
+            ystd   = np.std (y, axis=1)
         
         # store data
         data.update({fdo_k.dim_names[0]: 
@@ -419,7 +426,8 @@ def get_fmean(fdo, res):
                       'y'     : y     , 
                       'ymean' : ymean , 
                       'yplus' : yplus , 
-                      'yminus': yminus}})       
+                      'yminus': yminus,
+                      'ystd'  : ystd  }})       
    
     # return data
     return data
