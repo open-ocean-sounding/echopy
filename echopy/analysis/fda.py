@@ -3,8 +3,8 @@
 Funtional Data Analysis on multifrequency acoustic data. 
 Adapted from the R package 'fda.oce' (https://github.com/EPauthenet/fda.oce)
 to work on multifrequency and depth-varying acoustic data, as explained in 
-"Ariza et al. (under review). Acoustic seascape partitioning through functional 
-data analysis". 
+"Ariza et al. (2022). Acoustic seascape partitioning through functional 
+data analysis" (https://doi.org/10.1111/jbi.14534). 
 
 Copyright (c) 2020 EchoPY
 
