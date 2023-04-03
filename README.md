@@ -10,6 +10,8 @@
 
 Echopy is a multipurpose library containing common algorithms for fisheries acoustic data processing, such as background noise correction, removal of seabed and corrupted pings, target detection, multifrequency analysis, and binning. The library provides building blocks that can be assembled for a variety of fisheries acoustics applications and is committed to transparency, cooperation, and universal access in fisheries acoustics software.
 
+See the [tests](https://github.com/open-ocean-sounding/echopy/tree/master/tests) directory for code usage examples.
+
 ## Installation
 Echopy requires [Python 3.6](https://www.python.org/)
 
@@ -22,6 +24,12 @@ or install the latest version available in the develop branch by cloning the rep
 ```
 git clone https://github.com/open-ocean-sounding/echopy.git
 pip install ./echopy
+```
+
+An experimental [conda](https://conda.io) package for Python 3.6 and higher is [available on conda-forge](https://anaconda.org/conda-forge/echopy). However, use with care, as it has not been tested extensively. To install in a conda environment using the terminal:
+
+```bash
+conda install -c conda-forge echopy
 ```
 
 ## Contributing
