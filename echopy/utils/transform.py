@@ -185,15 +185,15 @@ def pos2dis(lon, lat, units='nm'):
     if units=='nm':
         for i in range(len(dis)-1):
             if np.isnan(lat[i]) | np.isnan(lon[i]) | np.isnan(lat[i+1]) | np.isnan(lon[i+1]):
-                dis[i] = np.nan
+                dis[i+1] = np.nan
             else:
-                dis[i] = distance((lat[i], lon[i]), (lat[i+1], lon[i+1])).nm
+                dis[i+1] = distance((lat[i], lon[i]), (lat[i+1], lon[i+1])).nm
     elif units=='km':
         for i in range(len(dis)-1):
             if np.isnan(lat[i]) | np.isnan(lon[i]) | np.isnan(lat[i+1]) | np.isnan(lon[i+1]):
-                dis[i] = np.nan
+                dis[i+1] = np.nan
             else:
-                dis[i] = distance((lat[i], lon[i]), (lat[i+1], lon[i+1])).km
+                dis[i+1] = distance((lat[i], lon[i]), (lat[i+1], lon[i+1])).km
     else:
         raise Exception('Units not recognised')
     
