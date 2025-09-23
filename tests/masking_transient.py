@@ -43,8 +43,8 @@ r38   = raw38.get_Sv(calibration = params).range
 # mask transient noise
 # =============================================================================
 print('Masking transient noise...')
-r0, n, thr = 100, 30, (3, 1) # (metres, pings, decibels)
-mask38tn  = maskTN.fielding(Sv38,  r38,  r0, n, thr)
+r0, r1, roff, n, thr = 900, 1000, 20, 30, (3, 1)
+mask38tn = maskTN.fielding(Sv=Sv38, r=r38, r0=r0, r1=r1, n=n, thr=thr, roff=roff)
 Sv38tnoff = Sv38.copy()
 Sv38tnoff[mask38tn[0]|mask38tn[1]] = np.nan
 
@@ -74,5 +74,6 @@ plt.colorbar().set_label('dB')
 plt.title('Sv 38 kHz - transient noise masked')
 plt.xlabel('Time (dd HH:MM)')
 
+plt.tight_layout()
+# plt.savefig('masking_transient.png', dpi=150)
 plt.show()
-#plt.savefig('masking_transient.png', dpi=150)
